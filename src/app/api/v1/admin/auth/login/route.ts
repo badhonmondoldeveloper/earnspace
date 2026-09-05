@@ -55,15 +55,16 @@ export async function POST(req: NextRequest) {
     });
     setAdminSessionCookie(token);
 
+    // Non-blocking Audit Logging
     const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
-    await AdminAuditService.logAction({
+    AdminAuditService.logAction({
       adminUserId: admin.id,
       action: 'admin.login',
       targetType: 'admin_user',
       targetId: admin.id,
       reason: 'Admin authentication login',
       ipAddress: ip,
-    });
+    }).catch((e) => console.error('Non-blocking audit log error:', e));
 
     return successResponse({
       id: admin.id,
@@ -76,4 +77,3 @@ export async function POST(req: NextRequest) {
     return errorResponse(error?.message || String(error) || 'Internal server error', 500);
   }
 }
-
