@@ -14,12 +14,12 @@ export async function POST(req: NextRequest) {
       return errorResponse('Email and password required', 400);
     }
 
-    let admin = await prisma.adminUser.findUnique({
-      where: { email: email.toLowerCase() },
+    const lowerEmail = email.toLowerCase();
+    let admin = await prisma.adminUser.findFirst({
+      where: { email: lowerEmail },
     });
 
     // Seed initial Super Admin for requested admin email or default admin
-    const lowerEmail = email.toLowerCase();
     if (!admin && (lowerEmail === 'badhonmondoldeveloper@gmail.com' || lowerEmail === 'admin@earnspace.com')) {
       const passwordHash = await hashPassword(password);
       admin = await prisma.adminUser.create({
@@ -42,10 +42,11 @@ export async function POST(req: NextRequest) {
       return errorResponse('Invalid admin credentials', 401);
     }
 
-    await prisma.adminUser.update({
+    // Non-blocking timestamp update
+    prisma.adminUser.update({
       where: { id: admin.id },
       data: { lastLoginAt: new Date() },
-    });
+    }).catch((e) => console.error('Last login timestamp update error:', e));
 
     const token = generateAdminToken({
       adminId: admin.id,
