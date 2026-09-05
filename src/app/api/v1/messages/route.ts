@@ -55,6 +55,24 @@ export async function POST(req: NextRequest) {
     if (!recipientId || !content) {
       return errorResponse('Recipient and message content required', 400);
     }
+    if (recipientId === session.userId) {
+      return errorResponse('You cannot message yourself', 400);
+    }
+
+    const recipient = await prisma.user.findUnique({
+      where: { id: recipientId },
+      select: { id: true, settings: { select: { messagePermission: true, whoCanMessageMe: true } } },
+    });
+    if (!recipient) return errorResponse('Recipient not found', 404);
+
+    const messagePermission = recipient.settings?.messagePermission || recipient.settings?.whoCanMessageMe || 'everyone';
+    if (messagePermission === 'nobody') return errorResponse('This user does not accept messages', 403);
+    if (messagePermission === 'followers') {
+      const follows = await prisma.follow.findUnique({
+        where: { followerId_followingId: { followerId: session.userId, followingId: recipientId } },
+      });
+      if (!follows) return errorResponse('Follow this user before sending a message', 403);
+    }
 
     // Find or create direct conversation between two users
     let conversation = await prisma.conversation.findFirst({

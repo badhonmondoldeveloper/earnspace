@@ -23,7 +23,9 @@ export async function GET(req: NextRequest) {
     }
 
     const { passwordHash, ...userData } = user;
-    return successResponse(userData, 'User profile fetched');
+    const response = successResponse(userData, 'User profile fetched');
+    response.headers.set('Cache-Control', 'private, no-store');
+    return response;
   } catch (error) {
     return errorResponse('Internal server error', 500);
   }

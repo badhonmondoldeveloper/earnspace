@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     const { emailOrUsername, password } = validation.data;
     const queryTerm = emailOrUsername.toLowerCase().trim();
 
-    let user = await prisma.user.findFirst({
+    const user = await prisma.user.findFirst({
       where: {
         OR: [{ email: queryTerm }, { username: queryTerm }],
       },
@@ -32,43 +32,6 @@ export async function POST(req: NextRequest) {
         wallet: true,
       },
     });
-
-    // Auto-create initial admin user if logging in with badhonmondoldeveloper@gmail.com
-    if (!user && (queryTerm === 'badhonmondoldeveloper@gmail.com' || queryTerm === 'badhondev')) {
-      const { hashPassword } = await import('@/lib/auth');
-      const passwordHash = await hashPassword(password);
-      user = await prisma.user.create({
-        data: {
-          username: 'badhondev',
-          email: 'badhonmondoldeveloper@gmail.com',
-          passwordHash,
-          status: 'active',
-          accountType: 'CREATOR',
-          profile: {
-            create: {
-              fullName: 'Badhon Mondol',
-              bio: 'Creator & Founder of EarnSpace',
-            },
-          },
-          settings: {
-            create: {
-              notificationEmail: true,
-              notificationPush: true,
-            },
-          },
-          wallet: {
-            create: {
-              availableBalance: 100.0,
-              currency: 'USD',
-            },
-          },
-        },
-        include: {
-          profile: true,
-          wallet: true,
-        },
-      });
-    }
 
     if (!user) {
       return errorResponse('Email or password is incorrect', 401);

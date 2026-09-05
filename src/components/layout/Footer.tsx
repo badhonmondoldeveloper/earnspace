@@ -25,9 +25,8 @@ export function Footer() {
         <div>
           <h4 className="text-xs font-semibold text-white uppercase tracking-wider mb-3">Product</h4>
           <ul className="space-y-2 text-xs">
-            <li><Link href="/features" className="hover:text-white transition">Features</Link></li>
-            <li><Link href="/how-it-works" className="hover:text-white transition">How It Works</Link></li>
-            <li><Link href="/creators" className="hover:text-white transition">Creators</Link></li>
+            <li><Link href="/about" className="hover:text-white transition">About EarnSpace</Link></li>
+            <li><Link href="/creator" className="hover:text-white transition">Creator Studio</Link></li>
             <li><Link href="/pricing" className="hover:text-white transition">Pricing</Link></li>
             <li><Link href="/explore" className="hover:text-white transition">Explore</Link></li>
           </ul>
@@ -37,10 +36,8 @@ export function Footer() {
         <div>
           <h4 className="text-xs font-semibold text-white uppercase tracking-wider mb-3">Community</h4>
           <ul className="space-y-2 text-xs">
-            <li><Link href="/blog" className="hover:text-white transition">Platform Blog</Link></li>
-            <li><Link href="/community-guidelines" className="hover:text-white transition">Community Guidelines</Link></li>
-            <li><Link href="/faq" className="hover:text-white transition">FAQ</Link></li>
-            <li><Link href="/contact" className="hover:text-white transition">Contact Us</Link></li>
+            <li><Link href="/explore" className="hover:text-white transition">Platform Discovery</Link></li>
+            <li><Link href="/about" className="hover:text-white transition">Community & Support</Link></li>
           </ul>
         </div>
 
@@ -48,8 +45,7 @@ export function Footer() {
         <div>
           <h4 className="text-xs font-semibold text-white uppercase tracking-wider mb-3">Legal & Policies</h4>
           <ul className="space-y-2 text-xs">
-            <li><Link href="/terms" className="hover:text-white transition">Terms of Service</Link></li>
-            <li><Link href="/privacy" className="hover:text-white transition">Privacy Policy</Link></li>
+            <li><Link href="/about" className="hover:text-white transition">Terms & Privacy</Link></li>
             <li><Link href="/monetization-policy" className="hover:text-white transition">Monetization Policy</Link></li>
             <li><Link href="/referral-policy" className="hover:text-white transition">Referral Policy</Link></li>
             <li><Link href="/withdrawal-policy" className="hover:text-white transition">Withdrawal Policy</Link></li>

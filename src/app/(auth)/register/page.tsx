@@ -39,7 +39,11 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (data.success) {
-        window.location.href = '/dashboard';
+        const redirectTarget = new URLSearchParams(window.location.search).get('redirect');
+        const safeRedirect = redirectTarget?.startsWith('/') && !redirectTarget.startsWith('//')
+          ? redirectTarget
+          : '/dashboard';
+        window.location.href = safeRedirect;
       } else {
         setError(data.message || (data.errors?.[0]?.message ?? 'Registration failed'));
       }

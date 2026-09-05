@@ -2,32 +2,47 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { successResponse, errorResponse } from '@/lib/response';
+import { RESERVED_USERNAMES } from '@/lib/auth';
 
 export async function GET(req: NextRequest, { params }: { params: { username: string } }) {
   try {
     const rawUsername = params.username.replace(/^@/, '').toLowerCase();
+    if (RESERVED_USERNAMES.includes(rawUsername)) {
+      return errorResponse('User profile not found', 404);
+    }
     const session = await getSession();
 
     const user = await prisma.user.findUnique({
       where: { username: rawUsername },
       include: {
-        profile: true,
-        posts: {
-          take: 10,
-          orderBy: { createdAt: 'desc' },
-          include: { media: true, reactions: true, comments: true },
-        },
-        blogs: {
-          where: { status: 'published' },
-          take: 5,
-          orderBy: { publishedAt: 'desc' },
-        },
+        profile: { select: { fullName: true, bio: true, avatar: true, cover: true, location: true, website: true, category: true, socialLinks: true, followersCount: true, followingCount: true, postsCount: true, blogsCount: true, videosCount: true, reelsCount: true } },
+        settings: { select: { profileVisibility: true } },
       },
     });
 
     if (!user) {
       return errorResponse('User profile not found', 404);
     }
+
+    const isOwnProfile = session?.userId === user.id;
+    if (user.settings?.profileVisibility === 'private' && !isOwnProfile) {
+      return errorResponse('This profile is private', 403);
+    }
+
+    const [posts, blogs] = await Promise.all([
+      prisma.post.findMany({
+        where: isOwnProfile ? { userId: user.id } : { userId: user.id, status: 'published', visibility: 'public' },
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        include: { media: true, _count: { select: { reactions: true, comments: true } } },
+      }),
+      prisma.blog.findMany({
+        where: { userId: user.id, status: 'published' },
+        take: 5,
+        orderBy: { publishedAt: 'desc' },
+        select: { id: true, title: true, slug: true, excerpt: true, publishedAt: true, coverImage: true },
+      }),
+    ]);
 
     let isFollowing = false;
     if (session) {
@@ -42,16 +57,22 @@ export async function GET(req: NextRequest, { params }: { params: { username: st
       isFollowing = !!followRecord;
     }
 
-    const { passwordHash, email, ...safeUser } = user;
-
-    return successResponse({
-      ...safeUser,
+    const response = successResponse({
+      id: user.id,
+      username: user.username,
+      accountType: user.accountType,
+      isEmailVerified: user.isEmailVerified,
+      profile: user.profile,
+      posts,
+      blogs,
       isFollowing,
-      isOwnProfile: session?.userId === user.id,
+      isOwnProfile,
     });
+    response.headers.set('Cache-Control', 'private, no-store');
+    return response;
   } catch (error) {
     console.error('Profile fetch error:', error);
-    return errorResponse('Internal server error', 500);
+    return errorResponse('Something went wrong. Please try again.', 500);
   }
 }
 

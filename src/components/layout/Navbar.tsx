@@ -4,8 +4,8 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Sparkles, Search, Bell, MessageSquare, PlusSquare, User, LogOut, Sun, Moon, LayoutDashboard } from 'lucide-react';
 
-export function Navbar() {
-  const [user, setUser] = useState<any>(null);
+export function Navbar({ initialUser }: { initialUser?: any }) {
+  const [user, setUser] = useState<any>(initialUser || null);
   const [isDark, setIsDark] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -15,6 +15,8 @@ export function Navbar() {
       .then((data) => {
         if (data.success && data.data) {
           setUser(data.data);
+        } else if (!data.success) {
+          setUser(null);
         }
       })
       .catch(() => {});
@@ -106,14 +108,18 @@ export function Navbar() {
               <div className="relative group">
                 <Link href={`/@${user.username}`} className="flex items-center gap-2 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
                   <div className="w-8 h-8 rounded-full bg-brand-100 text-brand-600 dark:bg-brand-900 dark:text-brand-300 font-bold text-sm flex items-center justify-center border border-brand-200 dark:border-brand-700">
-                    {user.username?.[0]?.toUpperCase() || 'U'}
+                    {user.profile?.avatar ? (
+                      <img src={user.profile.avatar} alt="" className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      user.username?.[0]?.toUpperCase() || 'U'
+                    )}
                   </div>
                 </Link>
 
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 py-1 hidden group-hover:block">
                   <Link href={`/@${user.username}`} className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700">
                     <User className="w-4 h-4 text-brand-500" />
-                    <span>My Profile</span>
+                    <span>{user.profile?.fullName || user.username}<small className="block text-[10px] text-slate-400">@{user.username}</small></span>
                   </Link>
                   <Link href="/dashboard" className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700">
                     <LayoutDashboard className="w-4 h-4 text-brand-500" />

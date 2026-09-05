@@ -61,6 +61,23 @@ export async function getSession(): Promise<UserSessionPayload | null> {
   return storedSession ? payload : null;
 }
 
+export async function getCurrentUser() {
+  const session = await getSession();
+  if (!session) return null;
+
+  return prisma.user.findUnique({
+    where: { id: session.userId },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      accountType: true,
+      isEmailVerified: true,
+      profile: { select: { fullName: true, avatar: true, category: true } },
+    },
+  });
+}
+
 export async function createUserSession(
   payload: Omit<UserSessionPayload, 'sessionId'>,
   metadata: { ipAddress?: string; userAgent?: string } = {}
@@ -115,6 +132,7 @@ export function clearSessionCookie() {
 export const RESERVED_USERNAMES = [
   'admin', 'administrator', 'earnspace', 'support', 'help', 'api', 'dashboard',
   'settings', 'explore', 'stories', 'blog', 'blogging', 'privacy', 'terms', 'auth',
-  'login', 'register', 'messages', 'notifications', 'root', 'user', 'official'
+  'login', 'register', 'messages', 'notifications', 'creator', 'pricing', 'features',
+  'search', 'about', 'contact', 'faq', 'community-guidelines', 'root', 'user', 'official'
 ];
 

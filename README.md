@@ -84,4 +84,7 @@ npm run build
 - [`docs/media-architecture.md`](docs/media-architecture.md) — Storage, media validation, and video processing.
 - [`docs/admin-final-audit.md`](docs/admin-final-audit.md) — Admin control-plane audit, integration status, and limitations.
 - [`docs/disaster-recovery.md`](docs/disaster-recovery.md) — Recovery layers, procedures, and financial safety.
+- [`docs/full-system-audit.md`](docs/full-system-audit.md) — Website-wide audit findings and limitations.
+- [`docs/routes.md`](docs/routes.md) — Public, authenticated, admin, API, and reserved route map.
+- [`docs/final-bug-report.md`](docs/final-bug-report.md) — Fixed, verified, and not-verified items.
 

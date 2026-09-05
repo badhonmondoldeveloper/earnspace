@@ -18,8 +18,14 @@ export default function DashboardPage() {
       .then((data) => {
         if (data.success) {
           setUser(data.data);
+        } else if (data.success === false) {
+          window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
         }
       });
+
+    if (new URLSearchParams(window.location.search).get('action') === 'create') {
+      setIsCreateModalOpen(true);
+    }
 
     fetchFeed('all');
   }, []);

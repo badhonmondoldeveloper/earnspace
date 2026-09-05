@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
     const [users, posts, blogs] = await Promise.all([
       prisma.user.findMany({
         where: {
+          settings: { searchVisibility: 'public' },
           OR: [
             { username: { contains: searchTerm } },
             { profile: { fullName: { contains: searchTerm } } },
@@ -32,6 +33,7 @@ export async function GET(req: NextRequest) {
         where: {
           content: { contains: searchTerm },
           status: 'published',
+          visibility: 'public',
         },
         take: 5,
         include: {

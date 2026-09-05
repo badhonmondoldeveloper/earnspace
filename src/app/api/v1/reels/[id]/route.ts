@@ -5,6 +5,7 @@ import { successResponse, errorResponse } from '@/lib/response';
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const session = await getSession();
     const reel = await prisma.reel.findUnique({
       where: { id: params.id },
       include: {
@@ -19,6 +20,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     });
 
     if (!reel) {
+      return errorResponse('Reel not found', 404);
+    }
+    if (reel.userId !== session?.userId && (reel.status !== 'published' || reel.visibility !== 'public')) {
       return errorResponse('Reel not found', 404);
     }
     return successResponse(reel);

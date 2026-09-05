@@ -2,11 +2,19 @@ import { NextRequest } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/response';
-import { getVideoById } from '@/services/videoService';
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const video = await getVideoById(params.id);
+    const session = await getSession();
+    const video = await prisma.video.findFirst({
+      where: {
+        id: params.id,
+        ...(session ? { OR: [{ userId: session.userId }, { status: 'published', visibility: 'public' }] } : { status: 'published', visibility: 'public' }),
+      },
+      include: {
+        user: { select: { id: true, username: true, profile: { select: { fullName: true, avatar: true, bio: true, followersCount: true } } } },
+      },
+    });
     if (!video) {
       return errorResponse('Video not found', 404);
     }
