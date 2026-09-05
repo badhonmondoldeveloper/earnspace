@@ -1,0 +1,842 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id              String   @id @default(uuid())
+  username        String   @unique
+  email           String   @unique
+  passwordHash    String
+  status          String   @default("active") // active, pending_verification, restricted, suspended, banned, deleted
+  emailVerifiedAt DateTime?
+  phoneVerifiedAt DateTime?
+  lastLoginAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  profile             Profile?
+  settings            UserSetting?
+  sessions            UserSession[]
+  posts               Post[]
+  postReactions       PostReaction[]
+  comments            Comment[]
+  commentReactions    CommentReaction[]
+  saves               Save[]
+  shares              Share[]
+  stories             Story[]
+  storyViews          StoryView[]           @relation("ViewerRelation")
+  blogs               Blog[]
+  pages               Page[]
+  following           Follow[]              @relation("FollowerRelation")
+  followers           Follow[]              @relation("FollowingRelation")
+  blocksSent          Block[]               @relation("BlockerRelation")
+  blocksReceived      Block[]               @relation("BlockedRelation")
+  mutesSent           Mute[]                @relation("MuterRelation")
+  mutesReceived       Mute[]                @relation("MutedRelation")
+  conversationMembers ConversationMember[]
+  messagesSent        Message[]             @relation("MessageSender")
+  notifications       Notification[]        @relation("NotificationUser")
+  notificationsSent   Notification[]        @relation("NotificationSender")
+  reportsSubmitted    Report[]              @relation("ReporterRelation")
+  roles               UserRole[]
+  
+  // Part 2 Monetization & Business Relations
+  wallet              Wallet?
+  earnings            CreatorEarning[]
+  withdrawalMethods   WithdrawalMethod[]
+  withdrawalRequests  WithdrawalRequest[]
+  referral            Referral?             @relation("UserReferralCode")
+  referralsReferred   Referral[]            @relation("ReferredByRelation")
+  referralEvents      ReferralEvent[]
+  campaignParticipations CampaignParticipant[]
+  advertiserProfile   Advertiser?
+  subscriptions       Subscription[]
+  riskEvents          RiskEvent[]
+}
+
+model Profile {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName       String
+  bio            String?
+  avatar         String?
+  cover          String?
+  location       String?
+  website        String?
+  socialLinks    String?  @default("{}")
+  followersCount Int      @default(0)
+  followingCount Int      @default(0)
+  postsCount     Int      @default(0)
+  blogsCount     Int      @default(0)
+  profileViews   Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model UserSetting {
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profileVisibility String   @default("public")
+  messagePermission  String   @default("everyone")
+  followPermission   String   @default("everyone")
+  notificationEmail  Boolean  @default(true)
+  notificationPush   Boolean  @default(true)
+  theme              String   @default("system")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model UserSession {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  description String?
+  users       UserRole[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  key         String           @unique
+  description String?
+  roles       RolePermission[]
+}
+
+model UserRole {
+  userId String
+  roleId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model Post {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content     String
+  type        String   @default("text")
+  visibility  String   @default("public")
+  status      String   @default("published")
+  scheduledAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  media       PostMedia[]
+  reactions   PostReaction[]
+  comments    Comment[]
+  saves       Save[]
+  shares      Share[]
+}
+
+model PostMedia {
+  id        String   @id @default(uuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  url       String
+  type      String   @default("image")
+  mimeType  String?
+  size      Int?
+  createdAt DateTime @default(now())
+}
+
+model PostReaction {
+  id        String   @id @default(uuid())
+  postId    String
+  userId    String
+  type      String   @default("like")
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  postId    String
+  userId    String
+  parentId  String?
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post      Post              @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    Comment?          @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[]         @relation("CommentReplies")
+  reactions CommentReaction[]
+}
+
+model CommentReaction {
+  id        String   @id @default(uuid())
+  commentId String
+  userId    String
+  type      String   @default("like")
+  createdAt DateTime @default(now())
+
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId])
+}
+
+model Save {
+  id        String   @id @default(uuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+}
+
+model Share {
+  id        String   @id @default(uuid())
+  postId    String
+  userId    String
+  platform  String   @default("internal")
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Story {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mediaUrl    String?
+  type        String   @default("text")
+  textOverlay String?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  views StoryView[]
+}
+
+model StoryView {
+  id       String   @id @default(uuid())
+  storyId  String
+  viewerId String
+  viewedAt DateTime @default(now())
+
+  story  Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  viewer User  @relation("ViewerRelation", fields: [viewerId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, viewerId])
+}
+
+model Blog {
+  id             String    @id @default(uuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title          String
+  slug           String    @unique
+  coverImage     String?
+  content        String
+  excerpt        String?
+  category       String?   @default("General")
+  tags           String?   @default("[]")
+  seoTitle       String?
+  seoDescription String?
+  status         String    @default("published")
+  viewsCount     Int       @default(0)
+  publishedAt    DateTime? @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Page {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug        String   @unique
+  title       String
+  description String?
+  status      String   @default("published")
+  publishedAt DateTime? @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  blocks   PageBlock[]
+  settings PageSetting?
+}
+
+model PageBlock {
+  id          String   @id @default(uuid())
+  pageId      String
+  page        Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  type        String   
+  position    Int      @default(0)
+  contentJson String   @default("{}")
+  visibility  Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PageSetting {
+  id                 String   @id @default(uuid())
+  pageId             String   @unique
+  page               Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  theme              String   @default("modern")
+  typography         String   @default("sans")
+  colorsJson         String   @default("{}")
+  layout             String   @default("single-column")
+  customSettingsJson String   @default("{}")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("FollowerRelation", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("FollowingRelation", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+}
+
+model Block {
+  id        String   @id @default(uuid())
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  blocker User @relation("BlockerRelation", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("BlockedRelation", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+}
+
+model Mute {
+  id        String   @id @default(uuid())
+  muterId   String
+  mutedId   String
+  createdAt DateTime @default(now())
+
+  muter User @relation("MuterRelation", fields: [muterId], references: [id], onDelete: Cascade)
+  muted User @relation("MutedRelation", fields: [mutedId], references: [id], onDelete: Cascade)
+
+  @@unique([muterId, mutedId])
+}
+
+model Conversation {
+  id        String   @id @default(uuid())
+  isGroup   Boolean  @default(false)
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members  ConversationMember[]
+  messages Message[]
+}
+
+model ConversationMember {
+  id             String   @id @default(uuid())
+  conversationId String
+  userId         String
+  joinedAt       DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  conversationId String
+  senderId       String
+  content        String
+  attachments    String?  @default("[]")
+  isRead         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  senderId  String?
+  type      String   
+  title     String
+  body      String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user   User  @relation("NotificationUser", fields: [userId], references: [id], onDelete: Cascade)
+  sender User? @relation("NotificationSender", fields: [senderId], references: [id], onDelete: SetNull)
+}
+
+model Report {
+  id          String   @id @default(uuid())
+  reporterId  String
+  targetType  String   
+  targetId    String
+  category    String   
+  description String?
+  status      String   @default("pending") // pending, under_review, resolved, dismissed, escalated
+  createdAt   DateTime @default(now())
+
+  reporter User @relation("ReporterRelation", fields: [reporterId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// PART 2 MONETIZATION & BUSINESS ENGINE MODELS
+// ==========================================
+
+model RevenueSource {
+  id            String   @id @default(uuid())
+  name          String
+  type          String   
+  description   String?
+  status        String   @default("active")
+  configuration String?  @default("{}")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  revenueEvents RevenueEvent[]
+}
+
+model RevenueEvent {
+  id                 String    @id @default(uuid())
+  sourceId           String
+  campaignId         String?
+  externalReference  String?   @unique
+  grossAmount        Float
+  fees               Float     @default(0.0)
+  netAmount          Float
+  currency           String    @default("USD")
+  verificationStatus String    @default("pending")
+  eventType          String    
+  occurredAt         DateTime  @default(now())
+  verifiedAt         DateTime?
+  reversalAt         DateTime?
+  metadata           String?   @default("{}")
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  source RevenueSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  earnings CreatorEarning[]
+}
+
+model RevenueRule {
+  id                   String    @id @default(uuid())
+  name                 String
+  sourceType           String
+  campaignId           String?
+  userSharePercent     Float     @default(50.0)
+  platformSharePercent Float     @default(50.0)
+  pendingDays          Int       @default(7)
+  minimumThreshold     Float     @default(1.0)
+  eligibilityRules     String?   @default("{}")
+  fraudRules           String?   @default("{}")
+  ruleVersion          Int       @default(1)
+  status               String    @default("active")
+  startAt              DateTime? @default(now())
+  endAt                DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  earnings CreatorEarning[]
+}
+
+model CreatorEarning {
+  id                String    @id @default(uuid())
+  userId            String
+  revenueEventId    String
+  sourceId          String
+  campaignId        String?
+  grossAmount       Float
+  fees              Float     @default(0.0)
+  netEligibleAmount Float
+  userShare         Float
+  platformShare     Float
+  currency          String    @default("USD")
+  status            String    @default("pending")
+  ruleId            String
+  ruleVersion       Int       @default(1)
+  pendingUntil      DateTime
+  approvedAt        DateTime?
+  reversedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  revenueEvent RevenueEvent @relation(fields: [revenueEventId], references: [id], onDelete: Cascade)
+  rule         RevenueRule  @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+}
+
+model Wallet {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  currency          String   @default("USD")
+  availableBalance  Float    @default(0.0)
+  pendingBalance    Float    @default(0.0)
+  lifetimeEarned    Float    @default(0.0)
+  lifetimeWithdrawn Float    @default(0.0)
+  isFrozen          Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+  requests     WithdrawalRequest[]
+}
+
+model WalletTransaction {
+  id             String   @id @default(uuid())
+  walletId       String
+  type           String   
+  amount         Float
+  currency       String   @default("USD")
+  referenceType  String?  
+  referenceId    String?
+  idempotencyKey String   @unique
+  description    String
+  balanceBefore  Float
+  balanceAfter   Float
+  createdAt      DateTime @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+}
+
+model WithdrawalMethod {
+  id                String   @id @default(uuid())
+  userId            String
+  provider          String   
+  accountIdentifier String   
+  accountName       String?
+  verificationStatus String  @default("verified")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  requests WithdrawalRequest[]
+}
+
+model WithdrawalRequest {
+  id                 String    @id @default(uuid())
+  userId             String
+  walletId           String
+  withdrawalMethodId String
+  amount             Float
+  fee                Float     @default(0.0)
+  netAmount          Float
+  currency           String    @default("USD")
+  status             String    @default("requested")
+  requestedAt        DateTime  @default(now())
+  reviewedAt         DateTime?
+  processedAt        DateTime?
+  rejectionReason    String?
+  adminNote          String?
+  idempotencyKey     String    @unique
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wallet           Wallet           @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  withdrawalMethod WithdrawalMethod @relation(fields: [withdrawalMethodId], references: [id], onDelete: Cascade)
+}
+
+model Referral {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  referredById   String?  
+  referralCode   String   @unique
+  totalReferrals Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user       User            @relation("UserReferralCode", fields: [userId], references: [id], onDelete: Cascade)
+  referredBy User?           @relation("ReferredByRelation", fields: [referredById], references: [id], onDelete: SetNull)
+  events     ReferralEvent[]
+}
+
+model ReferralEvent {
+  id                 String    @id @default(uuid())
+  referralId         String
+  referredUserId     String
+  qualificationStatus String   @default("pending")
+  rewardAmount       Float     @default(0.0)
+  rewardedAt         DateTime?
+  createdAt          DateTime  @default(now())
+
+  referral User @relation(fields: [referredUserId], references: [id], onDelete: Cascade)
+  parent   Referral @relation(fields: [referralId], references: [id], onDelete: Cascade)
+}
+
+model CampaignPartner {
+  id                 String   @id @default(uuid())
+  companyName        String
+  contactName        String
+  email              String   @unique
+  website            String?
+  status             String   @default("active")
+  verificationStatus String   @default("verified")
+  notes              String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  campaigns Campaign[]
+}
+
+model Campaign {
+  id                 String   @id @default(uuid())
+  name               String
+  slug               String   @unique
+  description        String
+  partnerId          String?
+  campaignType       String   @default("affiliate")
+  landingUrl         String?
+  startAt            DateTime @default(now())
+  endAt              DateTime?
+  budget             Float    @default(1000.0)
+  spentBudget        Float    @default(0.0)
+  currency           String   @default("USD")
+  rewardType         String   @default("fixed")
+  rewardAmount       Float    @default(10.0)
+  conversionEvent    String   @default("action")
+  verificationMethod String   @default("automatic")
+  eligibilityRules   String?  @default("{}")
+  status             String   @default("active")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  partner      CampaignPartner?      @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  participants CampaignParticipant[]
+  events       CampaignEvent[]
+}
+
+model CampaignParticipant {
+  id         String   @id @default(uuid())
+  campaignId String
+  userId     String
+  status     String   @default("joined")
+  joinedAt   DateTime @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, userId])
+}
+
+model CampaignEvent {
+  id             String   @id @default(uuid())
+  campaignId     String
+  userId         String?
+  eventType      String   
+  eventReference String   @unique
+  rewardAmount   Float    @default(0.0)
+  createdAt      DateTime @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+}
+
+model Advertiser {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  companyName    String
+  website        String?
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaigns  AdCampaign[]
+}
+
+model AdCampaign {
+  id            String   @id @default(uuid())
+  advertiserId  String
+  name          String
+  objective     String   @default("awareness")
+  budget        Float    @default(500.0)
+  dailyBudget   Float    @default(50.0)
+  startAt       DateTime @default(now())
+  endAt         DateTime?
+  audienceRules String?  @default("{}")
+  placement     String   @default("feed")
+  status        String   @default("approved")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  advertiser Advertiser   @relation(fields: [advertiserId], references: [id], onDelete: Cascade)
+  creatives  AdCreative[]
+  ads        Ad[]
+}
+
+model AdCreative {
+  id             String   @id @default(uuid())
+  adCampaignId   String
+  title          String
+  description    String?
+  mediaUrl       String?
+  destinationUrl String
+  ctaText        String   @default("Learn More")
+  createdAt      DateTime @default(now())
+
+  adCampaign AdCampaign @relation(fields: [adCampaignId], references: [id], onDelete: Cascade)
+  ads        Ad[]
+}
+
+model Ad {
+  id           String   @id @default(uuid())
+  adCampaignId String
+  creativeId   String
+  placement    String   @default("feed")
+  status       String   @default("active")
+  createdAt    DateTime @default(now())
+
+  adCampaign AdCampaign @relation(fields: [adCampaignId], references: [id], onDelete: Cascade)
+  creative   AdCreative @relation(fields: [creativeId], references: [id], onDelete: Cascade)
+  events     AdEvent[]
+}
+
+model AdEvent {
+  id             String   @id @default(uuid())
+  adId           String
+  eventType      String   
+  ipAddress      String?
+  idempotencyKey String   @unique
+  createdAt      DateTime @default(now())
+
+  ad Ad @relation(fields: [adId], references: [id], onDelete: Cascade)
+}
+
+model SubscriptionPlan {
+  id             String   @id @default(uuid())
+  name           String   @unique
+  description    String
+  price          Float    @default(0.0)
+  currency       String   @default("USD")
+  billingInterval String  @default("monthly")
+  featuresJson   String   @default("[]")
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id             String    @id @default(uuid())
+  userId         String
+  planId         String
+  status         String    @default("active")
+  currentPeriodStart DateTime @default(now())
+  currentPeriodEnd   DateTime
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+model RiskEvent {
+  id         String   @id @default(uuid())
+  userId     String?
+  eventType  String   
+  riskScore  Float    @default(0.0)
+  riskLevel  String   @default("low")
+  metadata   String?  @default("{}")
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+// ==========================================
+// PART 3 ADVANCED ADMIN & AUDIT LOGGING MODELS
+// ==========================================
+
+model AdminUser {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  fullName     String
+  role         String    @default("Admin") // Super Admin, Admin, Finance Manager, Moderator, Support Agent, Ad Manager, Content Manager, Analytics Manager
+  status       String    @default("active") // active, suspended
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  auditLogs         AuditLog[]
+  moderationActions ModerationAction[]
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  adminUserId String?
+  action      String   // user.ban, wallet.freeze, withdrawal.approve, rule.update, setting.change
+  targetType  String   // user, wallet, withdrawal, rule, setting, content
+  targetId    String?
+  beforeJson  String?  @default("{}")
+  afterJson   String?  @default("{}")
+  ipAddress   String?
+  userAgent   String?
+  reason      String
+  createdAt   DateTime @default(now())
+
+  adminUser AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+}
+
+model ModerationAction {
+  id          String   @id @default(uuid())
+  moderatorId String
+  actionType  String   // warning, content_removed, content_restored, restriction, suspension, ban, report_dismissed
+  targetType  String   // post, comment, story, blog, user, message
+  targetId    String
+  reason      String
+  metadata    String?  @default("{}")
+  createdAt   DateTime @default(now())
+
+  moderator AdminUser @relation(fields: [moderatorId], references: [id], onDelete: Cascade)
+}
+
+model PlatformSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  category    String   @default("general") // general, auth, monetization, security, maintenance
+  isEncrypted Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+}
