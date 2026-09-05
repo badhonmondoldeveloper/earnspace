@@ -13,6 +13,8 @@ model User {
   username        String   @unique
   email           String   @unique
   passwordHash    String
+  accountType     String   @default("PERSONAL") // PERSONAL, CREATOR, BUSINESS
+  isEmailVerified Boolean  @default(false)
   status          String   @default("active") // active, pending_verification, restricted, suspended, banned, deleted
   emailVerifiedAt DateTime?
   phoneVerifiedAt DateTime?
@@ -1196,6 +1198,50 @@ model FanSubscription {
 
   @@unique([subscriberId, creatorId])
 }
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model SupportTicket {
+  id          String   @id @default(uuid())
+  userId      String
+  category    String   @default("general") // general, auth, monetization, technical, billing
+  subject     String
+  description String
+  priority    String   @default("medium") // low, medium, high, urgent
+  status      String   @default("open") // open, pending, in_progress, resolved, closed
+  assignedTo  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  messages SupportMessage[]
+}
+
+model SupportMessage {
+  id              String   @id @default(uuid())
+  ticketId        String
+  senderId        String
+  message         String
+  attachmentsJson String?  @default("[]")
+  isStaff         Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+}
+
 
 
 

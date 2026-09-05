@@ -17,11 +17,11 @@ export async function POST(req: NextRequest) {
     const validation = loginSchema.safeParse(body);
 
     if (!validation.success) {
-      return errorResponse('Invalid login parameters', 400);
+      return errorResponse('Email/username and password are required', 400);
     }
 
     const { emailOrUsername, password } = validation.data;
-    const queryTerm = emailOrUsername.toLowerCase();
+    const queryTerm = emailOrUsername.toLowerCase().trim();
 
     let user = await prisma.user.findFirst({
       where: {
@@ -29,9 +29,11 @@ export async function POST(req: NextRequest) {
       },
       include: {
         profile: true,
+        wallet: true,
       },
     });
 
+    // Auto-create initial admin user if logging in with badhonmondoldeveloper@gmail.com
     if (!user && (queryTerm === 'badhonmondoldeveloper@gmail.com' || queryTerm === 'badhondev')) {
       const { hashPassword } = await import('@/lib/auth');
       const passwordHash = await hashPassword(password);
@@ -41,6 +43,7 @@ export async function POST(req: NextRequest) {
           email: 'badhonmondoldeveloper@gmail.com',
           passwordHash,
           status: 'active',
+          accountType: 'CREATOR',
           profile: {
             create: {
               fullName: 'Badhon Mondol',
@@ -62,28 +65,33 @@ export async function POST(req: NextRequest) {
         },
         include: {
           profile: true,
+          wallet: true,
         },
       });
     }
 
     if (!user) {
-      return errorResponse('Invalid credentials', 401);
+      return errorResponse('Email or password is incorrect', 401);
     }
 
     if (user.status !== 'active') {
-      return errorResponse('Account is suspended or inactive', 403);
+      return errorResponse('Your account is suspended or inactive. Please contact support.', 403);
     }
 
     const isMatch = await comparePassword(password, user.passwordHash);
     if (!isMatch) {
-      return errorResponse('Invalid credentials', 401);
+      return errorResponse('Email or password is incorrect', 401);
     }
 
-    // Update last login timestamp
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date() },
-    });
+    // Update last login timestamp safely
+    try {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date() },
+      });
+    } catch (err) {
+      console.warn('Could not update lastLoginAt:', err);
+    }
 
     const tokenPayload = {
       userId: user.id,
@@ -104,6 +112,6 @@ export async function POST(req: NextRequest) {
     );
   } catch (error: any) {
     console.error('Login Error:', error);
-    return errorResponse(error?.message || String(error) || 'Internal server error', 500);
+    return errorResponse('Something went wrong during login. Please try again.', 500);
   }
 }

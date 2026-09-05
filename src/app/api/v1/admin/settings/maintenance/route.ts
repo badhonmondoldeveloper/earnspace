@@ -63,3 +63,4 @@ export async function PUT(req: NextRequest) {
     return errorResponse('Failed to update maintenance settings', 500);
   }
 }
+

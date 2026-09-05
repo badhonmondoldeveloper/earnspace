@@ -5,3 +5,4 @@
 2. Campaign is submitted to Admin review queue (`/admin/ads/campaigns`).
 3. Admin approves, pauses, or rejects campaign with audit logging.
 4. Active campaigns are prioritized by `SmartAdEngine` before external ad networks.
+

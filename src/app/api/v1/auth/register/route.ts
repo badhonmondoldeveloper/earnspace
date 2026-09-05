@@ -8,7 +8,7 @@ import { RateLimitService } from '@/services/rateLimitService';
 export async function POST(req: NextRequest) {
   try {
     const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
-    const rateLimit = RateLimitService.check(`auth:register:${ip}`, 5, 60 * 1000);
+    const rateLimit = RateLimitService.check(`auth:register:${ip}`, 10, 60 * 1000);
     if (!rateLimit.allowed) {
       return errorResponse('Too many registration attempts. Please try again later.', 429);
     }
@@ -25,78 +25,94 @@ export async function POST(req: NextRequest) {
     }
 
     const { fullName, username, email, password } = validation.data;
+    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedUsername = username.toLowerCase().trim();
 
     // Check existing email or username
     const existingUser = await prisma.user.findFirst({
       where: {
-        OR: [{ email }, { username }],
+        OR: [{ email: normalizedEmail }, { username: normalizedUsername }],
       },
     });
 
     if (existingUser) {
-      if (existingUser.email === email) {
-        return errorResponse('An account with this email already exists', 400, [{ field: 'email', message: 'Email taken' }]);
+      if (existingUser.email === normalizedEmail) {
+        return errorResponse('An account with this email address already exists', 400, [{ field: 'email', message: 'Email taken' }]);
       }
       return errorResponse('This username is already taken', 400, [{ field: 'username', message: 'Username taken' }]);
     }
 
     const passwordHash = await hashPassword(password);
 
-    // Create user, profile, user settings, default digital space page
-    const newUser = await prisma.user.create({
-      data: {
-        username: username.toLowerCase(),
-        email: email.toLowerCase(),
-        passwordHash,
-        profile: {
-          create: {
-            fullName,
-            bio: `Welcome to my EarnSpace!`,
-          },
-        },
-        settings: {
-          create: {
-            theme: 'system',
-          },
-        },
-        pages: {
-          create: {
-            slug: username.toLowerCase(),
-            title: `${fullName}'s Space`,
-            description: `Welcome to ${fullName}'s official EarnSpace digital presence`,
-            blocks: {
-              create: [
-                {
-                  type: 'hero',
-                  position: 0,
-                  contentJson: JSON.stringify({
-                    title: `Hi, I'm ${fullName}`,
-                    subtitle: 'Creator, Thinker, EarnSpace Member',
-                    ctaText: 'Follow My Space',
-                    ctaUrl: `/@${username.toLowerCase()}`,
-                  }),
-                },
-                {
-                  type: 'text',
-                  position: 1,
-                  contentJson: JSON.stringify({
-                    title: 'About Me',
-                    body: 'Welcome to my digital space! I share updates, posts, and articles on EarnSpace.',
-                  }),
-                },
-              ],
+    // Create User, Profile, UserSetting, Wallet & Page transactionally
+    const newUser = await prisma.$transaction(async (tx) => {
+      return tx.user.create({
+        data: {
+          username: normalizedUsername,
+          email: normalizedEmail,
+          passwordHash,
+          status: 'active',
+          accountType: 'PERSONAL',
+          profile: {
+            create: {
+              fullName,
+              bio: `Welcome to my EarnSpace!`,
             },
-            settings: {
-              create: {
-                theme: 'modern',
+          },
+          settings: {
+            create: {
+              theme: 'system',
+              notificationEmail: true,
+              notificationPush: true,
+            },
+          },
+          wallet: {
+            create: {
+              currency: 'USD',
+              availableBalance: 0.0,
+              pendingBalance: 0.0,
+            },
+          },
+          pages: {
+            create: {
+              slug: normalizedUsername,
+              title: `${fullName}'s Space`,
+              description: `Welcome to ${fullName}'s official EarnSpace digital presence`,
+              blocks: {
+                create: [
+                  {
+                    type: 'hero',
+                    position: 0,
+                    contentJson: JSON.stringify({
+                      title: `Hi, I'm ${fullName}`,
+                      subtitle: 'Creator, Thinker, EarnSpace Member',
+                      ctaText: 'Follow My Space',
+                      ctaUrl: `/@${normalizedUsername}`,
+                    }),
+                  },
+                  {
+                    type: 'text',
+                    position: 1,
+                    contentJson: JSON.stringify({
+                      title: 'About Me',
+                      body: 'Welcome to my digital space! I share updates, posts, and articles on EarnSpace.',
+                    }),
+                  },
+                ],
+              },
+              settings: {
+                create: {
+                  theme: 'modern',
+                },
               },
             },
           },
         },
-      },
-      include: {
-        profile: true,
-      },
+        include: {
+          profile: true,
+          wallet: true,
+        },
+      });
     });
 
     const tokenPayload = {
@@ -119,7 +135,6 @@ export async function POST(req: NextRequest) {
     );
   } catch (error: any) {
     console.error('Registration Error:', error);
-    return errorResponse('Internal server error', 500);
+    return errorResponse(error?.message || 'Failed to complete registration. Please try again.', 500);
   }
 }
-

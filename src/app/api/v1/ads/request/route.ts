@@ -28,3 +28,4 @@ export async function GET(req: NextRequest) {
     return errorResponse(error.message || 'Failed to serve advertisement', 500);
   }
 }
+

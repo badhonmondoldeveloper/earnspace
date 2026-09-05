@@ -48,3 +48,4 @@ export async function POST(req: NextRequest) {
     return errorResponse(error.message || 'Failed to create placement', 400);
   }
 }
+

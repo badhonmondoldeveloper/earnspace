@@ -45,3 +45,4 @@ export async function POST(req: NextRequest) {
     return errorResponse(error.message || 'Failed to create house ad', 400);
   }
 }
+
