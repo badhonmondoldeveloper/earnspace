@@ -14,19 +14,26 @@ export default function ExplorePage() {
   const [query, setQuery] = useState('');
   const [data, setData] = useState<ExploreData>({ users: [], posts: [], blogs: [] });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const loadExplore = async (search = '') => {
     setLoading(true);
+    setError('');
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 5000);
     try {
       const endpoint = search ? `/api/v1/search?q=${encodeURIComponent(search)}` : '/api/v1/posts?limit=12';
-      const response = await fetch(endpoint, { cache: 'no-store' });
+      const response = await fetch(endpoint, { cache: 'no-store', signal: controller.signal });
       const result = await response.json();
       if (search && result.success) {
         setData(result.data);
       } else if (!search && result.success) {
         setData({ users: [], posts: result.data?.items || [], blogs: [] });
       }
+    } catch {
+      setError('Discovery is temporarily unavailable. Please try again shortly.');
     } finally {
+      window.clearTimeout(timeout);
       setLoading(false);
     }
   };
@@ -58,7 +65,7 @@ export default function ExplorePage() {
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search creators, posts, and blogs" className="w-full rounded-2xl bg-slate-900 border border-slate-800 pl-11 pr-4 py-3 text-sm outline-none focus:border-brand-500" />
         </form>
 
-        {loading ? <div className="py-16 text-center text-sm text-slate-500">Loading discovery...</div> : (
+        {loading ? <div className="py-16 text-center text-sm text-slate-500">Loading discovery...</div> : error ? <div className="py-16 text-center text-sm text-amber-300">{error}</div> : (
           <div className="grid gap-5 md:grid-cols-3">
             <section className="rounded-2xl border border-slate-800 bg-slate-900 p-5 space-y-4">
               <h2 className="font-bold flex items-center gap-2"><UserRound className="w-4 h-4 text-brand-400" /> Creators</h2>
