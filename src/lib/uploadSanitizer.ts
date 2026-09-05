@@ -19,7 +19,7 @@ const MAGIC_NUMBERS: Record<string, number[]> = {
 };
 
 const ALLOWED_EXTENSIONS = new Set([
-  'jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'pdf', 'txt'
+  'jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'webm', 'pdf', 'txt'
 ]);
 
 export function validateFileUpload(

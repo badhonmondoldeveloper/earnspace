@@ -4,7 +4,14 @@ export const postCreateSchema = z.object({
   content: z.string().min(1, 'Post content cannot be empty').max(3000, 'Post content cannot exceed 3000 characters'),
   type: z.enum(['text', 'image', 'video', 'link', 'article']).default('text'),
   visibility: z.enum(['public', 'followers', 'private']).default('public'),
-  mediaUrls: z.array(z.string().url()).optional(),
+  mediaUrls: z.array(z.string().refine((value) => {
+    try {
+      new URL(value);
+      return true;
+    } catch {
+      return value.startsWith('/uploads/');
+    }
+  }, 'Media URL must be a valid URL or uploaded asset path')).optional(),
 });
 
 export const commentCreateSchema = z.object({

@@ -14,17 +14,21 @@ export default function UniversalCreateModal({ isOpen, onClose, onSuccess }: Uni
   // Post form state
   const [postContent, setPostContent] = useState('');
   const [postImageUrl, setPostImageUrl] = useState('');
+  const [postImageFile, setPostImageFile] = useState<File | null>(null);
 
   // Video form state
   const [videoTitle, setVideoTitle] = useState('');
   const [videoDesc, setVideoDesc] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
   const [videoThumb, setVideoThumb] = useState('');
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoThumbFile, setVideoThumbFile] = useState<File | null>(null);
   const [videoCategory, setVideoCategory] = useState('Tech & Science');
 
   // Reel form state
   const [reelCaption, setReelCaption] = useState('');
   const [reelVideoUrl, setReelVideoUrl] = useState('');
+  const [reelVideoFile, setReelVideoFile] = useState<File | null>(null);
   const [reelAudioTitle, setReelAudioTitle] = useState('Original Audio');
 
   // Drafts state
@@ -53,6 +57,16 @@ export default function UniversalCreateModal({ isOpen, onClose, onSuccess }: Uni
     }
   };
 
+  const uploadFile = async (file: File, purpose: string) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('purpose', purpose);
+    const response = await fetch('/api/v1/uploads', { method: 'POST', body: formData });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || 'Upload failed');
+    return result.data.url as string;
+  };
+
   if (!isOpen) return null;
 
   const handleCreatePost = async (e: React.FormEvent) => {
@@ -60,13 +74,14 @@ export default function UniversalCreateModal({ isOpen, onClose, onSuccess }: Uni
     setLoading(true);
     setError(null);
     try {
+      const uploadedPostImage = postImageFile ? await uploadFile(postImageFile, 'post-image') : '';
       const res = await fetch('/api/v1/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           content: postContent,
-          type: postImageUrl ? 'image' : 'text',
-          mediaUrls: postImageUrl ? [postImageUrl] : [],
+          type: uploadedPostImage ? 'image' : 'text',
+          mediaUrls: uploadedPostImage ? [uploadedPostImage] : [],
         }),
       });
       const data = await res.json();
@@ -75,6 +90,7 @@ export default function UniversalCreateModal({ isOpen, onClose, onSuccess }: Uni
       setSuccessMsg('Post created successfully!');
       setPostContent('');
       setPostImageUrl('');
+      setPostImageFile(null);
       if (onSuccess) onSuccess();
       setTimeout(() => {
         setSuccessMsg(null);
@@ -92,14 +108,17 @@ export default function UniversalCreateModal({ isOpen, onClose, onSuccess }: Uni
     setLoading(true);
     setError(null);
     try {
+      const uploadedVideo = videoFile ? await uploadFile(videoFile, 'video') : videoUrl;
+      const uploadedThumbnail = videoThumbFile ? await uploadFile(videoThumbFile, 'thumbnail') : videoThumb;
+      if (!uploadedVideo) throw new Error('Select a video file');
       const res = await fetch('/api/v1/videos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: videoTitle,
           description: videoDesc,
-          videoUrl,
-          thumbnailUrl: videoThumb,
+          videoUrl: uploadedVideo,
+          thumbnailUrl: uploadedThumbnail,
           category: videoCategory,
         }),
       });
@@ -111,6 +130,8 @@ export default function UniversalCreateModal({ isOpen, onClose, onSuccess }: Uni
       setVideoDesc('');
       setVideoUrl('');
       setVideoThumb('');
+      setVideoFile(null);
+      setVideoThumbFile(null);
       if (onSuccess) onSuccess();
       setTimeout(() => {
         setSuccessMsg(null);
@@ -128,12 +149,14 @@ export default function UniversalCreateModal({ isOpen, onClose, onSuccess }: Uni
     setLoading(true);
     setError(null);
     try {
+      const uploadedReelVideo = reelVideoFile ? await uploadFile(reelVideoFile, 'reel') : reelVideoUrl;
+      if (!uploadedReelVideo) throw new Error('Select a reel video file');
       const res = await fetch('/api/v1/reels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           caption: reelCaption,
-          videoUrl: reelVideoUrl,
+          videoUrl: uploadedReelVideo,
           audioTitle: reelAudioTitle,
         }),
       });
@@ -143,6 +166,7 @@ export default function UniversalCreateModal({ isOpen, onClose, onSuccess }: Uni
       setSuccessMsg('Reel published successfully!');
       setReelCaption('');
       setReelVideoUrl('');
+      setReelVideoFile(null);
       if (onSuccess) onSuccess();
       setTimeout(() => {
         setSuccessMsg(null);
@@ -271,12 +295,11 @@ export default function UniversalCreateModal({ isOpen, onClose, onSuccess }: Uni
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Image URL (Optional)</label>
+                <label className="block text-xs font-medium text-slate-400 mb-1">Photo from device (Optional)</label>
                 <input
-                  type="url"
-                  value={postImageUrl}
-                  onChange={(e) => setPostImageUrl(e.target.value)}
-                  placeholder="https://example.com/photo.jpg"
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  onChange={(e) => setPostImageFile(e.target.files?.[0] || null)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm"
                 />
               </div>
@@ -317,12 +340,11 @@ export default function UniversalCreateModal({ isOpen, onClose, onSuccess }: Uni
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Video URL (MP4 / WebM) *</label>
+                <label className="block text-xs font-medium text-slate-400 mb-1">Video from device (MP4 / WebM) *</label>
                 <input
-                  type="url"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  placeholder="https://example.com/video.mp4"
+                  type="file"
+                  accept="video/mp4,video/webm"
+                  onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
                   required
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm"
                 />
@@ -330,12 +352,11 @@ export default function UniversalCreateModal({ isOpen, onClose, onSuccess }: Uni
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Thumbnail URL</label>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Thumbnail from device</label>
                   <input
-                    type="url"
-                    value={videoThumb}
-                    onChange={(e) => setVideoThumb(e.target.value)}
-                    placeholder="https://example.com/thumb.jpg"
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={(e) => setVideoThumbFile(e.target.files?.[0] || null)}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm"
                   />
                 </div>
@@ -391,12 +412,11 @@ export default function UniversalCreateModal({ isOpen, onClose, onSuccess }: Uni
           {activeTab === 'reel' && (
             <form onSubmit={handleCreateReel} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Reel Video URL (9:16 Vertical) *</label>
+                <label className="block text-xs font-medium text-slate-400 mb-1">Reel video from device (9:16 Vertical) *</label>
                 <input
-                  type="url"
-                  value={reelVideoUrl}
-                  onChange={(e) => setReelVideoUrl(e.target.value)}
-                  placeholder="https://example.com/reel.mp4"
+                  type="file"
+                  accept="video/mp4,video/webm"
+                  onChange={(e) => setReelVideoFile(e.target.files?.[0] || null)}
                   required
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm"
                 />

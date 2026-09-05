@@ -7,6 +7,7 @@ export default function StoriesPage() {
   const [stories, setStories] = useState<any[]>([]);
   const [textOverlay, setTextOverlay] = useState('');
   const [mediaUrl, setMediaUrl] = useState('');
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [posting, setPosting] = useState(false);
 
   useEffect(() => {
@@ -21,19 +22,30 @@ export default function StoriesPage() {
 
   const handlePostStory = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!textOverlay.trim() && !mediaUrl.trim()) return;
+    if (!textOverlay.trim() && !mediaFile) return;
 
     setPosting(true);
     try {
+      let uploadedMediaUrl = '';
+      if (mediaFile) {
+        const formData = new FormData();
+        formData.append('file', mediaFile);
+        formData.append('purpose', 'story-image');
+        const upload = await fetch('/api/v1/uploads', { method: 'POST', body: formData });
+        const uploadData = await upload.json();
+        if (!upload.ok) throw new Error(uploadData.message || 'Upload failed');
+        uploadedMediaUrl = uploadData.data.url;
+      }
       const res = await fetch('/api/v1/stories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ textOverlay, mediaUrl, type: mediaUrl ? 'image' : 'text' }),
+        body: JSON.stringify({ textOverlay, mediaUrl: uploadedMediaUrl, type: uploadedMediaUrl ? 'image' : 'text' }),
       });
       const data = await res.json();
       if (data.success) {
         setTextOverlay('');
         setMediaUrl('');
+        setMediaFile(null);
         setStories([data.data, ...stories]);
       }
     } catch (e) {
@@ -64,10 +76,9 @@ export default function StoriesPage() {
           className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
         />
         <input
-          type="url"
-          value={mediaUrl}
-          onChange={(e) => setMediaUrl(e.target.value)}
-          placeholder="Optional image URL..."
+          type="file"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          onChange={(e) => setMediaFile(e.target.files?.[0] || null)}
           className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
         />
         <button

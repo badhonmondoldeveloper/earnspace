@@ -18,8 +18,8 @@ export default function UserProfilePage({ params }: { params: { username: string
   const [userReels, setUserReels] = useState<any[]>([]);
 
   // Avatar/Cover Modal State
-  const [avatarUrlInput, setAvatarUrlInput] = useState('');
-  const [coverUrlInput, setCoverUrlInput] = useState('');
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showCoverModal, setShowCoverModal] = useState(false);
 
@@ -82,16 +82,22 @@ export default function UserProfilePage({ params }: { params: { username: string
 
   const handleUpdateAvatar = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!avatarUrlInput) return;
+    if (!avatarFile) return;
     try {
+      const formData = new FormData();
+      formData.append('file', avatarFile);
+      formData.append('purpose', 'avatar');
+      const upload = await fetch('/api/v1/uploads', { method: 'POST', body: formData });
+      const uploadData = await upload.json();
+      if (!upload.ok) throw new Error(uploadData.message || 'Upload failed');
       const res = await fetch('/api/v1/profile/avatar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ avatarUrl: avatarUrlInput }),
+        body: JSON.stringify({ avatarUrl: uploadData.data.url }),
       });
       if (res.ok) {
         setShowAvatarModal(false);
-        setAvatarUrlInput('');
+        setAvatarFile(null);
         fetchProfile();
       }
     } catch (err) {
@@ -101,16 +107,22 @@ export default function UserProfilePage({ params }: { params: { username: string
 
   const handleUpdateCover = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!coverUrlInput) return;
+    if (!coverFile) return;
     try {
+      const formData = new FormData();
+      formData.append('file', coverFile);
+      formData.append('purpose', 'cover');
+      const upload = await fetch('/api/v1/uploads', { method: 'POST', body: formData });
+      const uploadData = await upload.json();
+      if (!upload.ok) throw new Error(uploadData.message || 'Upload failed');
       const res = await fetch('/api/v1/profile/cover', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ coverUrl: coverUrlInput }),
+        body: JSON.stringify({ coverUrl: uploadData.data.url }),
       });
       if (res.ok) {
         setShowCoverModal(false);
-        setCoverUrlInput('');
+        setCoverFile(null);
         fetchProfile();
       }
     } catch (err) {
@@ -410,10 +422,9 @@ export default function UserProfilePage({ params }: { params: { username: string
             <h3 className="text-lg font-bold text-white">Update Profile Picture</h3>
             <form onSubmit={handleUpdateAvatar} className="space-y-4">
               <input
-                type="url"
-                value={avatarUrlInput}
-                onChange={(e) => setAvatarUrlInput(e.target.value)}
-                placeholder="Enter image URL..."
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
                 required
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm"
               />
@@ -444,10 +455,9 @@ export default function UserProfilePage({ params }: { params: { username: string
             <h3 className="text-lg font-bold text-white">Update Cover Photo</h3>
             <form onSubmit={handleUpdateCover} className="space-y-4">
               <input
-                type="url"
-                value={coverUrlInput}
-                onChange={(e) => setCoverUrlInput(e.target.value)}
-                placeholder="Enter cover image URL..."
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
                 required
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm"
               />
