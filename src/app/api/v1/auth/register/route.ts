@@ -136,8 +136,8 @@ export async function POST(req: NextRequest) {
       'Account created successfully',
       201
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error('Registration Error:', error);
-    return errorResponse(error?.message || 'Failed to complete registration. Please try again.', 500);
+    return errorResponse('Something went wrong on our side. Please try again later.', 500);
   }
 }

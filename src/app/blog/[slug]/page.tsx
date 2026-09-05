@@ -6,18 +6,24 @@ import { Footer } from '@/components/layout/Footer';
 export const dynamic = 'force-dynamic';
 
 export default async function PublicBlogPage({ params }: { params: { slug: string } }) {
-  const blog = await prisma.blog.findFirst({
-    where: { slug: params.slug, status: 'published' },
-    select: {
-      title: true,
-      content: true,
-      excerpt: true,
-      coverImage: true,
-      publishedAt: true,
-      seoDescription: true,
-      user: { select: { username: true, profile: { select: { fullName: true } } } },
-    },
-  });
+  let blog;
+  try {
+    blog = await prisma.blog.findFirst({
+      where: { slug: params.slug, status: 'published' },
+      select: {
+        title: true,
+        content: true,
+        excerpt: true,
+        coverImage: true,
+        publishedAt: true,
+        seoDescription: true,
+        user: { select: { username: true, profile: { select: { fullName: true } } } },
+      },
+    });
+  } catch (error) {
+    console.error('Public blog lookup failed:', error);
+    notFound();
+  }
 
   if (!blog) notFound();
 
