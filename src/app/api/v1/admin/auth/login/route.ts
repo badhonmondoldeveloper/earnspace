@@ -18,13 +18,14 @@ export async function POST(req: NextRequest) {
       where: { email: email.toLowerCase() },
     });
 
-    // Seed initial Super Admin if database has no admins
-    if (!admin && email.toLowerCase() === 'admin@earnspace.com') {
+    // Seed initial Super Admin for requested admin email or default admin
+    const lowerEmail = email.toLowerCase();
+    if (!admin && (lowerEmail === 'badhonmondoldeveloper@gmail.com' || lowerEmail === 'admin@earnspace.com')) {
       const passwordHash = await hashPassword(password);
       admin = await prisma.adminUser.create({
         data: {
-          email: 'admin@earnspace.com',
-          fullName: 'Super Administrator',
+          email: lowerEmail,
+          fullName: lowerEmail === 'badhonmondoldeveloper@gmail.com' ? 'Badhon Mondol' : 'Super Administrator',
           passwordHash,
           role: 'Super Admin',
           status: 'active',
