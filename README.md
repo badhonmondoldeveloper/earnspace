@@ -82,4 +82,6 @@ npm run build
 - [`docs/search.md`](docs/search.md) — Search visibility, indexing, and discovery architecture.
 - [`docs/seo.md`](docs/seo.md) — Public metadata, indexing, and domain roadmap.
 - [`docs/media-architecture.md`](docs/media-architecture.md) — Storage, media validation, and video processing.
+- [`docs/admin-final-audit.md`](docs/admin-final-audit.md) — Admin control-plane audit, integration status, and limitations.
+- [`docs/disaster-recovery.md`](docs/disaster-recovery.md) — Recovery layers, procedures, and financial safety.
 

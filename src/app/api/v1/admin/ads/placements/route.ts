@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
-import { getAdminSession } from '@/lib/adminAuth';
+import { getAdminSession, hasAdminPermission } from '@/lib/adminAuth';
 import { prisma } from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/response';
 
@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
   try {
     const admin = await getAdminSession();
     if (!admin) return errorResponse('Unauthorized admin access', 401);
+    if (!hasAdminPermission(admin.role, 'ads.view')) return errorResponse('Permission denied', 403);
 
     const placements = await prisma.adPlacement.findMany({
       include: { provider: { select: { name: true, providerKey: true } } },
@@ -25,6 +26,7 @@ export async function POST(req: NextRequest) {
   try {
     const admin = await getAdminSession();
     if (!admin) return errorResponse('Unauthorized admin access', 401);
+    if (!hasAdminPermission(admin.role, 'ads.manage')) return errorResponse('Permission denied', 403);
 
     const { providerId, slotName, format = 'banner', frequency = 3, cooldownSeconds = 30 } = await req.json();
     if (!providerId || !slotName) {

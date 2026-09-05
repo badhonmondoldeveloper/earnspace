@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShieldCheck, LayoutDashboard, Users, CreditCard, DollarSign, Settings, History, Activity, LogOut } from 'lucide-react';
+import { ShieldCheck, LayoutDashboard, Users, CreditCard, DollarSign, Settings, History, Activity, Megaphone, Layers, Server, BadgeDollarSign } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -16,7 +16,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { label: 'User Management', href: '/admin/users', icon: Users },
     { label: 'Withdrawal Approvals', href: '/admin/withdrawals', icon: CreditCard },
+    { label: 'Ads Control Center', href: '/admin/ads', icon: Megaphone },
+    { label: 'Ad Providers', href: '/admin/revenue/providers', icon: Layers },
+    { label: 'Ad Placements', href: '/admin/ads/placements', icon: Layers },
+    { label: 'Ad Campaigns', href: '/admin/ads/campaigns', icon: BadgeDollarSign },
+    { label: 'Payout Operations', href: '/admin/payouts', icon: DollarSign },
     { label: 'Platform Settings', href: '/admin/settings', icon: Settings },
+    { label: 'Maintenance', href: '/admin/settings/maintenance', icon: Server },
     { label: 'Audit Logs', href: '/admin/audit-logs', icon: History },
     { label: 'System Health', href: '/admin/system-health', icon: Activity },
   ];

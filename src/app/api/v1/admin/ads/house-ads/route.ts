@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
-import { getAdminSession } from '@/lib/adminAuth';
+import { getAdminSession, hasAdminPermission } from '@/lib/adminAuth';
 import { HouseAdService } from '@/services/houseAdService';
 import { successResponse, errorResponse } from '@/lib/response';
 
@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
   try {
     const admin = await getAdminSession();
     if (!admin) return errorResponse('Unauthorized admin access', 401);
+    if (!hasAdminPermission(admin.role, 'ads.view')) return errorResponse('Permission denied', 403);
 
     const houseAds = await HouseAdService.listHouseAds();
     return successResponse(houseAds);
@@ -21,6 +22,7 @@ export async function POST(req: NextRequest) {
   try {
     const admin = await getAdminSession();
     if (!admin) return errorResponse('Unauthorized admin access', 401);
+    if (!hasAdminPermission(admin.role, 'ads.manage')) return errorResponse('Permission denied', 403);
 
     const body = await req.json();
     const { title, description, mediaUrl, destinationUrl, ctaText, placement, priority } = body;

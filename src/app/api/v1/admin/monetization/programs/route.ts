@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
-import { getAdminSession } from '@/lib/adminAuth';
+import { getAdminSession, hasAdminPermission } from '@/lib/adminAuth';
 import { prisma } from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/response';
 
@@ -9,6 +9,9 @@ export async function GET(req: NextRequest) {
     const adminSession = await getAdminSession();
     if (!adminSession) {
       return errorResponse('Unauthorized admin access', 401);
+    }
+    if (!hasAdminPermission(adminSession.role, 'finance.view')) {
+      return errorResponse('Permission denied', 403);
     }
 
     const programs = await prisma.monetizationProgram.findMany({
@@ -30,6 +33,9 @@ export async function POST(req: NextRequest) {
     const adminSession = await getAdminSession();
     if (!adminSession) {
       return errorResponse('Unauthorized admin access', 401);
+    }
+    if (!hasAdminPermission(adminSession.role, 'finance.manage')) {
+      return errorResponse('Permission denied', 403);
     }
 
     const body = await req.json();

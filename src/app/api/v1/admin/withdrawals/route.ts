@@ -46,15 +46,10 @@ export async function PATCH(req: NextRequest) {
     const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
 
     if (action === 'approve') {
-      const updated = await prisma.withdrawalRequest.update({
-        where: { id: requestId },
-        data: {
-          status: 'paid',
-          reviewedAt: new Date(),
-          processedAt: new Date(),
-          adminNote: reason || 'Approved by admin',
-        },
-      });
+      const approval = await WithdrawalService.approveWithdrawal(requestId, adminSession.adminId, reason || 'Approved by admin');
+      if (!approval.success) return errorResponse(approval.message || 'Approval failed', 400);
+      const payment = await WithdrawalService.markAsPaid(requestId, adminSession.adminId, reason || 'Approved and paid by admin');
+      if (!payment.success) return errorResponse(payment.message || 'Payment failed after approval', 400);
 
       await AdminAuditService.logAction({
         adminUserId: adminSession.adminId,
@@ -65,7 +60,7 @@ export async function PATCH(req: NextRequest) {
         ipAddress: ip,
       });
 
-      return successResponse(updated, 'Withdrawal request approved & marked as paid');
+      return successResponse(payment.request, 'Withdrawal request approved & marked as paid');
     }
 
     if (action === 'reject') {

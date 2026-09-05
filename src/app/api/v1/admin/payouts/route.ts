@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
-import { getAdminSession } from '@/lib/adminAuth';
+import { getAdminSession, hasAdminPermission } from '@/lib/adminAuth';
 import { prisma } from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/response';
 import { WithdrawalService } from '@/services/withdrawalService';
@@ -10,6 +10,9 @@ export async function GET(req: NextRequest) {
     const adminSession = await getAdminSession();
     if (!adminSession) {
       return errorResponse('Unauthorized admin access', 401);
+    }
+    if (!hasAdminPermission(adminSession.role, 'withdrawals.view')) {
+      return errorResponse('Permission denied', 403);
     }
 
     const { searchParams } = new URL(req.url);
@@ -36,6 +39,9 @@ export async function PUT(req: NextRequest) {
     const adminSession = await getAdminSession();
     if (!adminSession) {
       return errorResponse('Unauthorized admin access', 401);
+    }
+    if (!hasAdminPermission(adminSession.role, 'withdrawals.approve')) {
+      return errorResponse('Permission denied', 403);
     }
 
     const { requestId, action, adminNote, rejectionReason } = await req.json();

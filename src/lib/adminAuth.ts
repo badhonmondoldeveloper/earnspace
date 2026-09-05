@@ -21,7 +21,7 @@ export interface AdminSessionPayload {
 
 export const ADMIN_ROLE_PERMISSIONS: Record<string, string[]> = {
   'Super Admin': ['*'],
-  'Admin': ['users.*', 'content.*', 'finance.view', 'withdrawals.*', 'campaigns.*', 'ads.*', 'settings.*', 'audit_logs.view'],
+  'Admin': ['users.*', 'content.*', 'finance.*', 'monetization.*', 'withdrawals.*', 'campaigns.*', 'ads.*', 'settings.*', 'audit_logs.view'],
   'Finance Manager': ['finance.*', 'withdrawals.*', 'wallets.*', 'earnings.*', 'audit_logs.view'],
   'Moderator': ['content.*', 'reports.*', 'users.view', 'users.suspend'],
   'Support Agent': ['users.view', 'content.view', 'reports.view'],

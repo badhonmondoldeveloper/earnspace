@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
-import { getAdminSession } from '@/lib/adminAuth';
+import { getAdminSession, hasAdminPermission } from '@/lib/adminAuth';
 import { prisma } from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/response';
 
@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
   try {
     const admin = await getAdminSession();
     if (!admin) return errorResponse('Unauthorized admin access', 401);
+    if (!hasAdminPermission(admin.role, 'ads.view')) return errorResponse('Permission denied', 403);
 
     const campaigns = await prisma.adCampaign.findMany({
       include: {
@@ -28,6 +29,7 @@ export async function PUT(req: NextRequest) {
   try {
     const admin = await getAdminSession();
     if (!admin) return errorResponse('Unauthorized admin access', 401);
+    if (!hasAdminPermission(admin.role, 'campaigns.manage')) return errorResponse('Permission denied', 403);
 
     const { campaignId, status } = await req.json();
     if (!campaignId || !status) {

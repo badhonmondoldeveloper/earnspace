@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
-import { getAdminSession } from '@/lib/adminAuth';
+import { getAdminSession, hasAdminPermission } from '@/lib/adminAuth';
 import { prisma } from '@/lib/prisma';
 import { CronJobsService } from '@/services/cronJobsService';
 import { successResponse, errorResponse } from '@/lib/response';
@@ -9,6 +9,7 @@ export async function GET(req: NextRequest) {
   try {
     const admin = await getAdminSession();
     if (!admin) return errorResponse('Unauthorized admin access', 401);
+    if (!hasAdminPermission(admin.role, 'analytics.view')) return errorResponse('Permission denied', 403);
 
     const startTime = Date.now();
     await prisma.$queryRaw`SELECT 1`;
@@ -39,6 +40,7 @@ export async function POST(req: NextRequest) {
   try {
     const admin = await getAdminSession();
     if (!admin) return errorResponse('Unauthorized admin access', 401);
+    if (!hasAdminPermission(admin.role, 'settings.manage')) return errorResponse('Permission denied', 403);
 
     const jobResults = await CronJobsService.runAllJobs();
     return successResponse(jobResults, 'Background cron jobs executed successfully');

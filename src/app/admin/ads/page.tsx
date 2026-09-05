@@ -30,7 +30,7 @@ export default function UltraProAdminAdsPage() {
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/admin/ads/providers" className="px-3 py-2 bg-slate-900 border border-slate-800 text-xs font-semibold rounded-lg hover:border-slate-700 transition">
+            <Link href="/admin/revenue/providers" className="px-3 py-2 bg-slate-900 border border-slate-800 text-xs font-semibold rounded-lg hover:border-slate-700 transition">
               Ad Providers
             </Link>
             <Link href="/admin/ads/placements" className="px-3 py-2 bg-slate-900 border border-slate-800 text-xs font-semibold rounded-lg hover:border-slate-700 transition">
@@ -79,7 +79,7 @@ export default function UltraProAdminAdsPage() {
 
         {/* Admin Navigation Shortcuts */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link href="/admin/ads/providers" className="p-5 bg-slate-900/60 border border-slate-800 hover:border-slate-700 rounded-xl space-y-2 group transition">
+          <Link href="/admin/revenue/providers" className="p-5 bg-slate-900/60 border border-slate-800 hover:border-slate-700 rounded-xl space-y-2 group transition">
             <div className="flex items-center justify-between font-bold text-white group-hover:text-amber-400">
               <span className="flex items-center gap-2"><Settings className="w-4 h-4 text-emerald-400" /> Manage Ad Providers</span>
               <ArrowRight className="w-4 h-4" />
