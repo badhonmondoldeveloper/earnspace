@@ -27,3 +27,4 @@ export interface AdProviderInterface {
   reportEvent(eventId: string, eventType: 'impression' | 'click'): Promise<boolean>;
   healthCheck(): Promise<'healthy' | 'degraded' | 'offline'>;
 }
+

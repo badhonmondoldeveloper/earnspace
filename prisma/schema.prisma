@@ -1070,33 +1070,95 @@ model CreatorMonetization {
 }
 
 model AdProvider {
-  id              String   @id @default(uuid())
-  name            String
-  providerKey     String   @unique // google_adsense, adsterra, direct, fallback
-  status          String   @default("active") // active, inactive, testing
-  priority        Int      @default(1)
-  placementsJson  String   @default("[\"feed\", \"video\", \"reels\", \"blog\"]")
-  targetingJson   String   @default("{}")
-  credentialsJson String   @default("{}") // Hidden / Encrypted API credentials
-  healthStatus    String   @default("healthy") // healthy, degraded, offline
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                    String   @id @default(uuid())
+  name                  String
+  providerKey           String   @unique // google_adsense, adsterra, direct, house, fallback
+  providerType          String   @default("external_network") // external_network, direct_advertiser, house_ad
+  status                String   @default("active") // draft, testing, active, paused, disabled, unhealthy, error
+  priority              Int      @default(1)
+  placementsJson        String   @default("[\"feed\", \"video\", \"reels\", \"blog\"]")
+  supportedFormatsJson  String   @default("[\"banner\", \"native\", \"video_instream\", \"interstitial\"]")
+  supportedDevicesJson  String   @default("[\"mobile\", \"desktop\", \"tablet\"]")
+  supportedCountriesJson String  @default("[\"BD\", \"GLOBAL\"]")
+  targetingJson         String   @default("{}")
+  credentialsJson       String   @default("{}") // Hidden / Encrypted API credentials
+  secretReference       String?  // Reference key for server secret isolation
+  healthStatus          String   @default("healthy") // healthy, degraded, offline
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   placements AdPlacement[]
 }
 
 model AdPlacement {
-  id         String   @id @default(uuid())
-  providerId String
-  slotName   String   // feed, video, reels, blog, website, sidebar, explore
-  format     String   @default("banner") // banner, native, video_instream, interstitial
-  frequency  Int      @default(3) // E.g. show 1 ad per 3 posts
-  priority   Int      @default(1)
-  status     String   @default("active")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                   String   @id @default(uuid())
+  providerId           String
+  slotName             String   // SOCIAL_FEED_TOP, SOCIAL_FEED_MID, SOCIAL_FEED_BOTTOM, PROFILE_FEED, VIDEO_PRE_ROLL, VIDEO_MID_ROLL, VIDEO_POST_ROLL, REELS_FEED, STORY_AD, BLOG_TOP, BLOG_MID, BLOG_BOTTOM, EXPLORE_FEED, SEARCH_RESULTS, PERSONAL_SPACE_HEADER, PERSONAL_SPACE_CONTENT, PERSONAL_SPACE_SIDEBAR, PERSONAL_SPACE_FOOTER, DASHBOARD_SPONSOR
+  format               String   @default("banner") // banner, native, video_instream, interstitial
+  frequency            Int      @default(3) // E.g. show 1 ad per 3 items
+  cooldownSeconds      Int      @default(30)
+  priority             Int      @default(1)
+  status               String   @default("active")
+  contentRestrictionsJson String @default("{}")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   provider AdProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+}
+
+model HouseAd {
+  id             String   @id @default(uuid())
+  title          String
+  description    String?
+  mediaUrl       String?
+  destinationUrl String
+  ctaText        String   @default("Learn More")
+  placement      String   @default("feed")
+  priority       Int      @default(1)
+  status         String   @default("active") // active, paused, retired
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model AdAnalyticsAggregate {
+  id          String   @id @default(uuid())
+  timeframe   String   // hourly, daily, monthly
+  date        String   // YYYY-MM-DD or YYYY-MM-DD-HH
+  providerId  String?
+  placementId String?
+  campaignId  String?
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  ctr         Float    @default(0.0)
+  fillRate    Float    @default(100.0)
+  revenue     Float    @default(0.0)
+  rpm         Float    @default(0.0)
+  ecpm        Float    @default(0.0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([timeframe, date, providerId, placementId, campaignId], name: "ad_analytics_unique")
+}
+
+model AdRevenueAttribution {
+  id               String    @id @default(uuid())
+  eventId          String?   @unique
+  providerKey      String
+  placementSlot    String
+  campaignId       String?
+  contentId        String?
+  contentType      String?   // post, video, reel, blog, space
+  creatorId        String?
+  estimatedRevenue Float     @default(0.0)
+  reportedRevenue  Float     @default(0.0)
+  verifiedRevenue  Float     @default(0.0)
+  creatorShare     Float     @default(0.0)
+  platformShare    Float     @default(0.0)
+  status           String    @default("estimated") // estimated, reported, risk_review, verified, rejected, reversed
+  reversalReason   String?
+  ruleVersion      Int       @default(1)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }
 
 model FanSupport {
@@ -1134,5 +1196,6 @@ model FanSubscription {
 
   @@unique([subscriberId, creatorId])
 }
+
 
 

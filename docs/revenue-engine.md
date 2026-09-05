@@ -25,3 +25,4 @@ Google AdSense -> Adsterra Network -> Direct Campaigns -> Native Fallback
 ```
 
 If a primary provider is degraded or offline, advertising degrades gracefully to the next provider without crashing client viewports.
+

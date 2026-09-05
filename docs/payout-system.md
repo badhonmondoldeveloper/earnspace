@@ -21,3 +21,4 @@ Request Payout -> Idempotency Check -> Threshold Check -> Reserve Balance in Led
 ```
 
 If rejected by Admin, reserved funds are automatically returned to the creator's available wallet balance with full audit log entry.
+

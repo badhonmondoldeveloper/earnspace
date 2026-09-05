@@ -34,3 +34,4 @@ export class GoogleAdSenseProvider implements AdProviderInterface {
     return 'healthy';
   }
 }
+

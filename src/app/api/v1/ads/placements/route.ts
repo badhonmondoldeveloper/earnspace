@@ -15,3 +15,4 @@ export async function GET(req: NextRequest) {
     return errorResponse('Internal server error', 500);
   }
 }
+

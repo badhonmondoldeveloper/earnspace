@@ -29,3 +29,4 @@ export class AdsterraProvider implements AdProviderInterface {
     return 'healthy';
   }
 }
+

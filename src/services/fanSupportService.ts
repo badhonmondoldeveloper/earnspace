@@ -59,3 +59,4 @@ export async function processFanSupport(params: {
     return fanSupport;
   });
 }
+

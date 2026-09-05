@@ -46,3 +46,4 @@ export class DirectAdvertiserProvider implements AdProviderInterface {
     return 'healthy';
   }
 }
+

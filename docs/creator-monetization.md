@@ -27,3 +27,4 @@ Example rule configuration:
 ```
 
 Creators can view eligibility metrics and apply directly via `/creator/monetization`.
+

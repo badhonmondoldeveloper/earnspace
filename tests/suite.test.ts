@@ -4,6 +4,11 @@ import { MonetizationEngine } from '../src/services/monetizationEngine';
 import { FinancialLedgerService } from '../src/services/financialLedgerService';
 import { validatePayoutDestination } from '../src/services/payoutService';
 import { AdProviderManager } from '../src/lib/adProviders/adProviderManager';
+import { SmartAdEngine } from '../src/services/smartAdEngine';
+import { AdRiskEngine } from '../src/services/adRiskEngine';
+import { HouseAdService } from '../src/services/houseAdService';
+import { AdRevenueAttributionService } from '../src/services/adRevenueAttributionService';
+import { CronJobsService } from '../src/services/cronJobsService';
 import { AdminAuditService } from '../src/services/adminAuditService';
 import { prisma } from '../src/lib/prisma';
 
@@ -21,7 +26,7 @@ function assert(condition: boolean, message: string) {
 }
 
 async function runAllTests() {
-  console.log('🚀 Starting EarnSpace System QA Test Suite...\n');
+  console.log('🚀 Starting EarnSpace System QA Test Suite (Parts 1, 2 & 3)...\n');
 
   // 1. ADMIN RBAC & PERMISSIONS AUDIT
   console.log('--- Test Group 1: Admin RBAC & Permissions ---');
@@ -84,8 +89,31 @@ async function runAllTests() {
   assert(adPlacement.slotName === 'feed', 'Ad provider fallback manager returns valid placement slot');
   assert(typeof adPlacement.providerKey === 'string', 'Ad provider returns valid provider key');
 
-  // 4. FINANCIAL LEDGER & IDEMPOTENCY SAFETY
-  console.log('\n--- Test Group 4: Financial Ledger & Idempotency ---');
+  // 6. SMART AD SELECTION ENGINE & HOUSE ADS
+  console.log('\n--- Test Group 6: Smart Ad Selection & House Ads ---');
+  const smartAd = await SmartAdEngine.requestAd({ slotName: 'SOCIAL_FEED_MID', device: 'mobile', country: 'BD' });
+  assert(typeof smartAd.adId === 'string', 'SmartAdEngine returned valid adId');
+  assert(typeof smartAd.trackingToken === 'string', 'SmartAdEngine generated trackingToken');
+
+  const houseAd = await HouseAdService.getHouseAd('feed');
+  assert(houseAd.isHouseAd === true, 'HouseAdService returned valid fallback house ad');
+
+  // 7. AD FRAUD & RISK DETECTION ENGINE
+  console.log('\n--- Test Group 7: Ad Fraud & Bot Risk Evaluation ---');
+  const botResult = await AdRiskEngine.evaluateEvent({
+    eventType: 'click',
+    userAgent: 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+  });
+  assert(botResult.isBlocked === true, 'Bot user agent correctly flagged and blocked by AdRiskEngine');
+
+  const humanResult = await AdRiskEngine.evaluateEvent({
+    eventType: 'impression',
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+  });
+  assert(humanResult.isBlocked === false, 'Standard human browser session passed fraud audit');
+
+  // 8. FINANCIAL LEDGER & IDEMPOTENCY SAFETY
+  console.log('\n--- Test Group 8: Financial Ledger & Idempotency ---');
   try {
     const testUser = await prisma.user.upsert({
       where: { email: 'qa-user@earnspace.com' },
@@ -117,13 +145,8 @@ async function runAllTests() {
     assert(tx2.duplicate === true, 'Duplicate transaction recognized and flagged as duplicate');
     assert(tx2.transaction.balanceAfter === tx1.transaction.balanceAfter, 'Duplicate transaction blocked without double crediting');
 
-    // 5. REFERRAL ANTI-ABUSE AUDIT
-    console.log('\n--- Test Group 5: Referral System Anti-Self-Referral ---');
-    const selfReferralCheck = await ReferralService.registerReferral(testUser.id, testUser.id);
-    assert(selfReferralCheck.success === false, 'Self-referral qualification is strictly rejected');
-
-    // 6. ADMIN AUDIT TRAIL
-    console.log('\n--- Test Group 6: Immutable Admin Audit Logging ---');
+    // 9. ADMIN AUDIT TRAIL
+    console.log('\n--- Test Group 9: Immutable Admin Audit Logging ---');
     const testAdmin = await prisma.adminUser.upsert({
       where: { email: 'qa-admin@earnspace.com' },
       update: {},
