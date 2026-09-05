@@ -71,9 +71,9 @@ export async function POST(req: NextRequest) {
       fullName: admin.fullName,
       role: admin.role,
     }, 'Admin login successful');
-  } catch (error) {
+  } catch (error: any) {
     console.error('Admin Login error:', error);
-    return errorResponse('Internal server error', 500);
+    return errorResponse(error?.message || String(error) || 'Internal server error', 500);
   }
 }
 
