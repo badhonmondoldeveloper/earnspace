@@ -148,7 +148,7 @@ export default function DashboardPage() {
           )}
         </div>
         <div className="flex-1 text-xs text-slate-400 font-medium group-hover:text-slate-200">
-          What's on your mind? Create a post, video, or reel...
+          What&apos;s on your mind? Create a post, video, or reel...
         </div>
         <div className="flex items-center gap-2">
           <span className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:text-indigo-400 transition">

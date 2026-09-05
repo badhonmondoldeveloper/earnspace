@@ -21,7 +21,12 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return successResponse(userSessions);
+    return successResponse(
+      userSessions.map((userSession) => ({
+        ...userSession,
+        isCurrent: userSession.id === session.sessionId,
+      }))
+    );
   } catch (error: any) {
     console.error('Fetch sessions error:', error);
     return errorResponse('Failed to fetch user sessions', 500);
@@ -37,9 +42,9 @@ export async function DELETE(req: NextRequest) {
     await prisma.userSession.deleteMany({
       where: {
         userId: session.userId,
+        NOT: session.sessionId ? { id: session.sessionId } : undefined,
       },
     });
-
     return successResponse(null, 'Logged out of all other active sessions');
   } catch (error: any) {
     console.error('Logout all sessions error:', error);

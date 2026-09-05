@@ -26,6 +26,10 @@ EarnSpace is a commercial-grade social platform, creator mini-site builder, busi
 
 ## 🛠️ Quick Start & Local Execution
 
+Copy `.env.example` to `.env` and set `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`,
+`ADMIN_JWT_SECRET`, and `NEXT_PUBLIC_APP_URL` before starting the application.
+Authentication fails closed when either JWT secret is missing.
+
 ### 1. Installation
 ```bash
 git clone https://github.com/earnspace/earnspace.git
@@ -69,4 +73,13 @@ npm run build
 - [`docs/database-production.md`](docs/database-production.md) — Production Database & Indexing Strategy.
 - [`docs/backup-recovery.md`](docs/backup-recovery.md) — Backup Schedules & Disaster Recovery.
 - [`docs/deployment.md`](docs/deployment.md) — Production Deployment (Vercel & cPanel/Node).
+- [`docs/authentication.md`](docs/authentication.md) — Session security, password reset, and auth limitations.
+- [`docs/user-onboarding.md`](docs/user-onboarding.md) — Registration and onboarding architecture.
+- [`docs/production.md`](docs/production.md) — Deployment requirements and external dependencies.
+- [`docs/business-model.md`](docs/business-model.md) — Product, revenue, and financial boundaries.
+- [`docs/creator-platform.md`](docs/creator-platform.md) — Creator identity, tools, and monetization scope.
+- [`docs/monetization.md`](docs/monetization.md) — Revenue, ads, ledger, and payout safety rules.
+- [`docs/search.md`](docs/search.md) — Search visibility, indexing, and discovery architecture.
+- [`docs/seo.md`](docs/seo.md) — Public metadata, indexing, and domain roadmap.
+- [`docs/media-architecture.md`](docs/media-architecture.md) — Storage, media validation, and video processing.
 

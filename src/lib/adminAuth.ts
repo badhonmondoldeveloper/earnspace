@@ -2,8 +2,15 @@ import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 import { prisma } from './prisma';
 
-const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'earnspace-admin-super-secret-key-2026';
+const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET;
 const ADMIN_TOKEN_NAME = 'earnspace_admin_session';
+
+function getAdminJwtSecret(): string {
+  if (!ADMIN_JWT_SECRET) {
+    throw new Error('ADMIN_JWT_SECRET is not configured');
+  }
+  return ADMIN_JWT_SECRET;
+}
 
 export interface AdminSessionPayload {
   adminId: string;
@@ -24,12 +31,12 @@ export const ADMIN_ROLE_PERMISSIONS: Record<string, string[]> = {
 };
 
 export function generateAdminToken(payload: AdminSessionPayload): string {
-  return jwt.sign(payload, ADMIN_JWT_SECRET, { expiresIn: '1d' });
+  return jwt.sign(payload, getAdminJwtSecret(), { expiresIn: '1d' });
 }
 
 export function verifyAdminToken(token: string): AdminSessionPayload | null {
   try {
-    return jwt.verify(token, ADMIN_JWT_SECRET) as AdminSessionPayload;
+    return jwt.verify(token, getAdminJwtSecret()) as AdminSessionPayload;
   } catch {
     return null;
   }

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { hashPassword, setSessionCookie, generateToken } from '@/lib/auth';
+import { hashPassword, setSessionCookie, createUserSession } from '@/lib/auth';
 import { successResponse, errorResponse } from '@/lib/response';
 import { registerSchema } from '@/validations/auth.schema';
 import { RateLimitService } from '@/services/rateLimitService';
@@ -120,7 +120,10 @@ export async function POST(req: NextRequest) {
       username: newUser.username,
       email: newUser.email,
     };
-    const token = generateToken(tokenPayload);
+    const token = await createUserSession(tokenPayload, {
+      ipAddress: ip,
+      userAgent: req.headers.get('user-agent') || undefined,
+    });
     setSessionCookie(token);
 
     return successResponse(

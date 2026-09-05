@@ -21,7 +21,7 @@ const adminPublicPaths = ['/admin/login'];
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const sessionToken = request.cookies.get('earnspace_session')?.value;
-  const adminToken = request.cookies.get('admin_session')?.value;
+  const adminToken = request.cookies.get('earnspace_admin_session')?.value;
 
   // Protect admin routes
   if (pathname.startsWith('/admin') && !adminPublicPaths.includes(pathname)) {

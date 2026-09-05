@@ -39,10 +39,15 @@ export async function POST(req: NextRequest) {
     }
 
     const newPasswordHash = await hashPassword(newPassword);
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { passwordHash: newPasswordHash },
-    });
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash: newPasswordHash },
+      }),
+      prisma.userSession.deleteMany({
+        where: { userId: user.id },
+      }),
+    ]);
 
     return successResponse(null, 'Password updated successfully');
   } catch (error: any) {
