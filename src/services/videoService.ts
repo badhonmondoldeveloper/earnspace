@@ -113,3 +113,4 @@ export async function recordVideoView(videoId: string, viewerId?: string, durati
     data: { viewsCount: { increment: 1 } },
   });
 }
+

@@ -66,6 +66,14 @@ model User {
   reelViews           ReelView[]
   mentionsReceived    Mention[]             @relation("MentionedUser")
   drafts              ContentDraft[]
+
+  // Part 2 Advanced Monetization Relations
+  monetizationApplications MonetizationApplication[]
+  creatorMonetizations     CreatorMonetization[]
+  fanSupportsGiven         FanSupport[]        @relation("FanSupportSender")
+  fanSupportsReceived      FanSupport[]        @relation("FanSupportCreator")
+  fanSubscriptions         FanSubscription[]   @relation("FanSubscriber")
+  fanSubscribers           FanSubscription[]   @relation("FanCreator")
 }
 
 model Profile {
@@ -1005,4 +1013,126 @@ model ContentDraft {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+// ==========================================
+// PART 2 ADVANCED MONETIZATION & PAYOUT MODELS
+// ==========================================
+
+model MonetizationProgram {
+  id                   String   @id @default(uuid())
+  name                 String
+  type                 String   // ad_revenue, creator_rewards, sponsored_campaign, affiliate, fan_support, subscription, partner_campaign
+  description          String
+  status               String   @default("active") // active, paused, retired
+  eligibilityRulesJson String   @default("{}") // e.g. { minFollowers: 100, minViews: 1000, minAgeDays: 7 }
+  revenueModel         String   @default("revenue_share") // revenue_share, fixed_cpm, cpc, cpa
+  revenueSharePercent  Float    @default(70.0) // Creator share percentage
+  minimumThreshold     Float    @default(100.0) // Threshold amount
+  pendingDays          Int      @default(7)
+  supportedRegionsJson String   @default("[\"BD\", \"GLOBAL\"]")
+  terms                String?
+  policy               String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  applications MonetizationApplication[]
+  creators     CreatorMonetization[]
+}
+
+model MonetizationApplication {
+  id              String   @id @default(uuid())
+  userId          String
+  programId       String
+  status          String   @default("pending") // pending, approved, rejected
+  rejectionReason String?
+  appliedAt       DateTime @default(now())
+  reviewedAt      DateTime?
+  reviewedBy      String?
+
+  user    User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  program MonetizationProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, programId])
+}
+
+model CreatorMonetization {
+  id         String    @id @default(uuid())
+  userId     String
+  programId  String
+  status     String    @default("active") // active, paused, suspended
+  enrolledAt DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user    User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  program MonetizationProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, programId])
+}
+
+model AdProvider {
+  id              String   @id @default(uuid())
+  name            String
+  providerKey     String   @unique // google_adsense, adsterra, direct, fallback
+  status          String   @default("active") // active, inactive, testing
+  priority        Int      @default(1)
+  placementsJson  String   @default("[\"feed\", \"video\", \"reels\", \"blog\"]")
+  targetingJson   String   @default("{}")
+  credentialsJson String   @default("{}") // Hidden / Encrypted API credentials
+  healthStatus    String   @default("healthy") // healthy, degraded, offline
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  placements AdPlacement[]
+}
+
+model AdPlacement {
+  id         String   @id @default(uuid())
+  providerId String
+  slotName   String   // feed, video, reels, blog, website, sidebar, explore
+  format     String   @default("banner") // banner, native, video_instream, interstitial
+  frequency  Int      @default(3) // E.g. show 1 ad per 3 posts
+  priority   Int      @default(1)
+  status     String   @default("active")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  provider AdProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+}
+
+model FanSupport {
+  id               String   @id @default(uuid())
+  senderId         String
+  creatorId        String
+  grossAmount      Float
+  fees             Float    @default(0.0)
+  creatorShare     Float
+  platformShare    Float
+  currency         String   @default("USD")
+  status           String   @default("completed") // pending, completed, refunded
+  paymentReference String?  @unique
+  message          String?
+  createdAt        DateTime @default(now())
+
+  sender  User @relation("FanSupportSender", fields: [senderId], references: [id], onDelete: Cascade)
+  creator User @relation("FanSupportCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+}
+
+model FanSubscription {
+  id               String   @id @default(uuid())
+  subscriberId     String
+  creatorId        String
+  tierName         String   @default("Supporter")
+  price            Float    @default(5.0)
+  currency         String   @default("USD")
+  status           String   @default("active") // active, cancelled, expired
+  currentPeriodEnd DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  subscriber User @relation("FanSubscriber", fields: [subscriberId], references: [id], onDelete: Cascade)
+  creator    User @relation("FanCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriberId, creatorId])
+}
+
 

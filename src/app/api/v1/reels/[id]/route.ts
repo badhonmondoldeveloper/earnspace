@@ -55,3 +55,4 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     return errorResponse('Internal server error', 500);
   }
 }
+

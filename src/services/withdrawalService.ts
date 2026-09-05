@@ -116,5 +116,55 @@ export class WithdrawalService {
       return { success: true, message: 'Withdrawal request rejected and funds reversed' };
     });
   }
+
+  static async approveWithdrawal(withdrawalRequestId: string, adminId: string, adminNote?: string) {
+    const request = await prisma.withdrawalRequest.findUnique({
+      where: { id: withdrawalRequestId },
+    });
+
+    if (!request || request.status !== 'requested' && request.status !== 'under_review') {
+      return { success: false, message: 'Invalid or non-approvable request' };
+    }
+
+    const updated = await prisma.withdrawalRequest.update({
+      where: { id: withdrawalRequestId },
+      data: {
+        status: 'approved',
+        reviewedAt: new Date(),
+        adminNote,
+      },
+    });
+
+    return { success: true, request: updated };
+  }
+
+  static async markAsPaid(withdrawalRequestId: string, adminId: string, adminNote?: string) {
+    const request = await prisma.withdrawalRequest.findUnique({
+      where: { id: withdrawalRequestId },
+    });
+
+    if (!request || request.status === 'paid') {
+      return { success: false, message: 'Invalid or already paid request' };
+    }
+
+    const updated = await prisma.withdrawalRequest.update({
+      where: { id: withdrawalRequestId },
+      data: {
+        status: 'paid',
+        processedAt: new Date(),
+        adminNote,
+      },
+    });
+
+    // Update wallet lifetimeWithdrawn amount
+    await prisma.wallet.update({
+      where: { id: request.walletId },
+      data: {
+        lifetimeWithdrawn: { increment: request.amount },
+      },
+    });
+
+    return { success: true, request: updated };
+  }
 }
 

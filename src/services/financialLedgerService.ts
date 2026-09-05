@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma';
 
 export interface RecordTransactionParams {
   userId: string;
-  type: 'earning' | 'referral' | 'bonus' | 'withdrawal' | 'reversal' | 'refund' | 'adjustment' | 'fee';
+  type: 'earning' | 'referral' | 'bonus' | 'withdrawal' | 'reversal' | 'refund' | 'adjustment' | 'fee' | 'fan_support';
   amount: number;
   currency?: string;
   referenceType?: string;
@@ -74,7 +74,7 @@ export class FinancialLedgerService {
       // Handle ledger math
       if (isPendingCredit) {
         pendingAfter += amount;
-      } else if (type === 'earning' || type === 'referral' || type === 'bonus' || type === 'refund') {
+      } else if (type === 'earning' || type === 'referral' || type === 'bonus' || type === 'refund' || type === 'fan_support') {
         balanceAfter += amount;
         lifetimeEarnedAfter += amount;
       } else if (type === 'withdrawal' || type === 'fee') {

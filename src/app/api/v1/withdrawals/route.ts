@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
+export const dynamic = 'force-dynamic';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { successResponse, errorResponse } from '@/lib/response';
-import { WithdrawalService } from '@/services/withdrawalService';
+import { requestWithdrawal, getMinimumPayoutThreshold } from '@/services/payoutService';
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,6 +12,7 @@ export async function GET(req: NextRequest) {
       return errorResponse('Unauthorized', 401);
     }
 
+    const minThreshold = await getMinimumPayoutThreshold();
     const methods = await prisma.withdrawalMethod.findMany({
       where: { userId: session.userId },
       orderBy: { createdAt: 'desc' },
@@ -24,7 +26,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return successResponse({ methods, requests });
+    return successResponse({ minThreshold, methods, requests });
   } catch (error) {
     return errorResponse('Internal server error', 500);
   }
@@ -38,49 +40,30 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { action } = body;
-
-    // 1. Add withdrawal method destination (bKash, Nagad, Bank, etc.)
-    if (action === 'add_method') {
-      const { provider, accountIdentifier, accountName } = body;
-      if (!provider || !accountIdentifier) {
-        return errorResponse('Provider and account number required', 400);
-      }
-
-      const method = await prisma.withdrawalMethod.create({
-        data: {
-          userId: session.userId,
-          provider: provider.toLowerCase(),
-          accountIdentifier,
-          accountName,
-        },
-      });
-
-      return successResponse(method, 'Withdrawal destination saved', 201);
-    }
-
-    // 2. Request a payout withdrawal
     const { withdrawalMethodId, amount } = body;
+
     if (!withdrawalMethodId || !amount) {
       return errorResponse('Withdrawal method and amount required', 400);
     }
 
+    const parsedAmount = parseFloat(amount);
+    const minThreshold = await getMinimumPayoutThreshold();
+
+    if (parsedAmount < minThreshold) {
+      return errorResponse(`Minimum withdrawal threshold is ৳${minThreshold.toLocaleString()}`, 400);
+    }
+
     const idempotencyKey = `wd_${session.userId}_${Date.now()}`;
-    const result = await WithdrawalService.requestWithdrawal({
+    const result = await requestWithdrawal({
       userId: session.userId,
       withdrawalMethodId,
-      amount: parseFloat(amount),
+      amount: parsedAmount,
       idempotencyKey,
     });
 
-    if (!result.success) {
-      return errorResponse(result.message || 'Withdrawal request failed', 400);
-    }
-
-    return successResponse(result.withdrawalRequest, 'Withdrawal requested successfully', 201);
-  } catch (error) {
+    return successResponse(result.request, 'Withdrawal requested successfully', 201);
+  } catch (error: any) {
     console.error('Withdrawal API error:', error);
-    return errorResponse('Internal server error', 500);
+    return errorResponse(error.message || 'Internal server error', 400);
   }
 }
-

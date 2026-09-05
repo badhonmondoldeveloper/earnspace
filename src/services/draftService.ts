@@ -32,3 +32,4 @@ export async function deleteDraft(id: string, userId: string) {
     where: { id, userId },
   });
 }
+

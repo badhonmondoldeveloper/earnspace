@@ -2,7 +2,8 @@ import { hasAdminPermission, generateAdminToken } from '../src/lib/adminAuth';
 import { validateFileUpload } from '../src/lib/uploadSanitizer';
 import { MonetizationEngine } from '../src/services/monetizationEngine';
 import { FinancialLedgerService } from '../src/services/financialLedgerService';
-import { ReferralService } from '../src/services/referralService';
+import { validatePayoutDestination } from '../src/services/payoutService';
+import { AdProviderManager } from '../src/lib/adProviders/adProviderManager';
 import { AdminAuditService } from '../src/services/adminAuditService';
 import { prisma } from '../src/lib/prisma';
 
@@ -62,6 +63,26 @@ async function runAllTests() {
   assert(splitResult.userShare === 66.5, 'User share (70% of 95) = 66.5');
   assert(splitResult.platformShare === 28.5, 'Platform share (30% of 95) = 28.5');
   assert(splitResult.userShare + splitResult.platformShare === splitResult.netEligibleAmount, 'User share + Platform share equals net eligible revenue');
+
+  // 4. PAYOUT DESTINATION VALIDATION & THRESHOLD AUDIT
+  console.log('\n--- Test Group 4: Payout Destination & Threshold Enforcement ---');
+  const bkashValid = validatePayoutDestination('bkash', '01712345678');
+  assert(bkashValid.valid, 'Valid bKash 11-digit number passes validation');
+
+  const bkashInvalid = validatePayoutDestination('bkash', '0123');
+  assert(!bkashInvalid.valid, 'Invalid short bKash number is rejected');
+
+  const binanceUidValid = validatePayoutDestination('binance', '123456789', { type: 'uid' });
+  assert(binanceUidValid.valid, 'Valid Binance UID numeric ID passes validation');
+
+  const binanceTrc20Valid = validatePayoutDestination('binance', 'T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb', { type: 'wallet', network: 'TRC20' });
+  assert(binanceTrc20Valid.valid, 'Valid TRC20 wallet address starting with T passes validation');
+
+  // 5. AD PROVIDER FALLBACK CHAIN AUDIT
+  console.log('\n--- Test Group 5: Multi-Ad Provider Fallback Chain ---');
+  const adPlacement = await AdProviderManager.getPlacementWithFallback({ slotName: 'feed' });
+  assert(adPlacement.slotName === 'feed', 'Ad provider fallback manager returns valid placement slot');
+  assert(typeof adPlacement.providerKey === 'string', 'Ad provider returns valid provider key');
 
   // 4. FINANCIAL LEDGER & IDEMPOTENCY SAFETY
   console.log('\n--- Test Group 4: Financial Ledger & Idempotency ---');

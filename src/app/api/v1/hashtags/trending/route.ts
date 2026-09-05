@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+export const dynamic = 'force-dynamic';
 import { prisma } from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/response';
 
@@ -18,3 +19,4 @@ export async function GET(req: NextRequest) {
     return errorResponse('Internal server error', 500);
   }
 }
+

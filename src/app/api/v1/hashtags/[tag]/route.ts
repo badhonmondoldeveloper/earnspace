@@ -62,3 +62,4 @@ export async function GET(req: NextRequest, { params }: { params: { tag: string 
     return errorResponse('Internal server error', 500);
   }
 }
+
