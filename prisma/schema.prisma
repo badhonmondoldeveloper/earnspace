@@ -58,35 +58,59 @@ model User {
   advertiserProfile   Advertiser?
   subscriptions       Subscription[]
   riskEvents          RiskEvent[]
+
+  // Master Upgrade V2 — Social & Creator Relations
+  videos              Video[]
+  videoViews          VideoView[]
+  reels               Reel[]
+  reelViews           ReelView[]
+  mentionsReceived    Mention[]             @relation("MentionedUser")
+  drafts              ContentDraft[]
 }
 
 model Profile {
-  id             String   @id @default(uuid())
-  userId         String   @unique
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fullName       String
-  bio            String?
-  avatar         String?
-  cover          String?
-  location       String?
-  website        String?
-  socialLinks    String?  @default("{}")
-  followersCount Int      @default(0)
-  followingCount Int      @default(0)
-  postsCount     Int      @default(0)
-  blogsCount     Int      @default(0)
-  profileViews   Int      @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id              String    @id @default(uuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName        String
+  bio             String?
+  avatar          String?
+  cover           String?
+  location        String?
+  website         String?
+  pronouns        String?
+  birthday        DateTime?
+  gender          String?
+  category        String?   @default("General") // Creator category e.g. Tech, Vlog, Education
+  skills          String?   @default("[]")      // JSON array
+  interests       String?   @default("[]")      // JSON array
+  featuredVideoId String?
+  pinnedPostId    String?
+  socialLinks     String?   @default("{}")
+  followersCount  Int       @default(0)
+  followingCount  Int       @default(0)
+  postsCount      Int       @default(0)
+  blogsCount      Int       @default(0)
+  videosCount     Int       @default(0)
+  reelsCount      Int       @default(0)
+  profileViews    Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 model UserSetting {
   id                 String   @id @default(uuid())
   userId             String   @unique
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  profileVisibility String   @default("public")
-  messagePermission  String   @default("everyone")
-  followPermission   String   @default("everyone")
+  profileVisibility  String   @default("public")
+  messagePermission   String   @default("everyone")
+  followPermission    String   @default("everyone")
+  whoCanFollowMe     String   @default("everyone")
+  whoCanMessageMe    String   @default("everyone")
+  whoCanComment      String   @default("everyone")
+  whoCanTagMe        String   @default("everyone")
+  whoCanMentionMe    String   @default("everyone")
+  searchVisibility   String   @default("public")
   notificationEmail  Boolean  @default(true)
   notificationPush   Boolean  @default(true)
   theme              String   @default("system")
@@ -155,6 +179,8 @@ model Post {
   comments    Comment[]
   saves       Save[]
   shares      Share[]
+  hashtags    PostHashtag[]
+  mentions    Mention[]
 }
 
 model PostMedia {
@@ -840,3 +866,143 @@ model PlatformSetting {
   isEncrypted Boolean  @default(false)
   updatedAt   DateTime @updatedAt
 }
+
+// ==========================================
+// MASTER UPGRADE V2 — SOCIAL & CREATOR MODELS
+// ==========================================
+
+model Hashtag {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  postsCount  Int      @default(0)
+  videosCount Int      @default(0)
+  reelsCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  posts       PostHashtag[]
+  videos      VideoHashtag[]
+  reels       ReelHashtag[]
+}
+
+model PostHashtag {
+  postId    String
+  hashtagId String
+  post      Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  hashtag   Hashtag @relation(fields: [hashtagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, hashtagId])
+}
+
+model Mention {
+  id         String   @id @default(uuid())
+  userId     String   // mentioned user ID
+  targetType String   // post, comment, video, reel
+  targetId   String
+  postId     String?
+  createdAt  DateTime @default(now())
+
+  user User  @relation("MentionedUser", fields: [userId], references: [id], onDelete: Cascade)
+  post Post? @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model Video {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  videoUrl      String
+  thumbnailUrl  String?
+  duration      Int      @default(0) // seconds
+  visibility    String   @default("public")
+  status        String   @default("published")
+  category      String?  @default("General")
+  viewsCount    Int      @default(0)
+  likesCount    Int      @default(0)
+  commentsCount Int      @default(0)
+  sharesCount   Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  views    VideoView[]
+  hashtags VideoHashtag[]
+}
+
+model VideoHashtag {
+  videoId   String
+  hashtagId String
+  video     Video   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  hashtag   Hashtag @relation(fields: [hashtagId], references: [id], onDelete: Cascade)
+
+  @@id([videoId, hashtagId])
+}
+
+model VideoView {
+  id        String   @id @default(uuid())
+  videoId   String
+  viewerId  String?
+  viewer    User?    @relation(fields: [viewerId], references: [id], onDelete: SetNull)
+  duration  Int      @default(0)
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+}
+
+model Reel {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String?
+  caption       String?
+  videoUrl      String
+  thumbnailUrl  String?
+  audioTitle    String?  @default("Original Audio")
+  duration      Int      @default(0) // seconds (< 90s)
+  visibility    String   @default("public")
+  status        String   @default("published")
+  viewsCount    Int      @default(0)
+  likesCount    Int      @default(0)
+  commentsCount Int      @default(0)
+  sharesCount   Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  views    ReelView[]
+  hashtags ReelHashtag[]
+}
+
+model ReelHashtag {
+  reelId    String
+  hashtagId String
+  reel      Reel    @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  hashtag   Hashtag @relation(fields: [hashtagId], references: [id], onDelete: Cascade)
+
+  @@id([reelId, hashtagId])
+}
+
+model ReelView {
+  id        String   @id @default(uuid())
+  reelId    String
+  viewerId  String?
+  viewer    User?    @relation(fields: [viewerId], references: [id], onDelete: SetNull)
+  duration  Int      @default(0)
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  reel Reel @relation(fields: [reelId], references: [id], onDelete: Cascade)
+}
+
+model ContentDraft {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type         String   // post, blog, video, reel
+  title        String?
+  content      String?
+  mediaJson    String?  @default("[]")
+  metadataJson String?  @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+

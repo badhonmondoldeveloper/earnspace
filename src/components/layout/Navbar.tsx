@@ -119,6 +119,12 @@ export function Navbar() {
                     <LayoutDashboard className="w-4 h-4 text-brand-500" />
                     <span>Dashboard</span>
                   </Link>
+                  <Link href="/reels" className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700">
+                    <span>⚡ Reels Feed</span>
+                  </Link>
+                  <Link href="/creator" className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700">
+                    <span>🎨 Creator Studio</span>
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-2 px-4 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-left"

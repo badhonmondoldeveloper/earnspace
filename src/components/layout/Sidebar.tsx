@@ -14,6 +14,8 @@ export function Sidebar({ username }: SidebarProps) {
   const navItems = [
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { label: 'My Profile', href: username ? `/@${username}` : '/settings', icon: User },
+    { label: 'Reels Feed', href: '/reels', icon: Film },
+    { label: 'Creator Studio', href: '/creator', icon: LayoutDashboard },
     { label: 'My Website', href: '/dashboard/website', icon: Globe },
     { label: 'Stories', href: '/stories', icon: Film },
     { label: 'Blog Portal', href: '/dashboard/blog', icon: BookOpen },

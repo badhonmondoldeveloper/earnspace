@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth';
 import { successResponse, errorResponse } from '@/lib/response';
 import { postCreateSchema } from '@/validations/post.schema';
 import { sanitizeContent } from '@/lib/sanitizer';
+import { processHashtagsAndMentions } from '@/lib/hashtagMentionExtractor';
 
 export async function GET(req: NextRequest) {
   try {
@@ -123,6 +124,11 @@ export async function POST(req: NextRequest) {
       where: { userId: session.userId },
       data: { postsCount: { increment: 1 } },
     });
+
+    // Process hashtags & mentions asynchronously
+    processHashtagsAndMentions('post', post.id, sanitizedText, session.userId).catch((err) =>
+      console.error('Error processing hashtags/mentions:', err)
+    );
 
     return successResponse(post, 'Post created successfully', 201);
   } catch (error) {
