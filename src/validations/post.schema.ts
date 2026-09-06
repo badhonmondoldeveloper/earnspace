@@ -5,11 +5,12 @@ export const postCreateSchema = z.object({
   type: z.enum(['text', 'image', 'video', 'link', 'article']).default('text'),
   visibility: z.enum(['public', 'followers', 'private']).default('public'),
   mediaUrls: z.array(z.string().refine((value) => {
+    if (value.startsWith('data:') || value.startsWith('/')) return true;
     try {
       new URL(value);
       return true;
     } catch {
-      return value.startsWith('/uploads/');
+      return false;
     }
   }, 'Media URL must be a valid URL or uploaded asset path')).optional(),
 });
