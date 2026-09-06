@@ -79,7 +79,7 @@ export default function PayoutMethodsPage() {
               <span>💳</span> Payout Method Manager
             </h1>
             <p className="text-slate-400 text-sm mt-1">
-              Add and manage your bKash, Nagad, Rocket, Bank Account, or Binance payout details.
+              Add and manage your bKash, Nagad, Rocket, Upay, Bank Account, or Binance payout details.
             </p>
           </div>
           <Link
@@ -114,6 +114,7 @@ export default function PayoutMethodsPage() {
                   <option value="bkash">bKash (Mobile Wallet)</option>
                   <option value="nagad">Nagad (Mobile Wallet)</option>
                   <option value="rocket">Rocket (Mobile Wallet)</option>
+                  <option value="upay">Upay (Mobile Wallet)</option>
                   <option value="bank">Bank Transfer (Bangladesh)</option>
                   <option value="binance">Binance (UID / Crypto Wallet)</option>
                 </select>

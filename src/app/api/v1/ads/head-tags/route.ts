@@ -33,3 +33,4 @@ export async function GET(req: NextRequest) {
     return errorResponse(error.message || 'Internal server error', 500);
   }
 }
+

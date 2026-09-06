@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { GlobalHeadAdInjector } from '@/components/ads/GlobalHeadAdInjector';
+import { AdBlockDetector } from '@/components/ads/AdBlockDetector';
+import { PwaInstallPrompt } from '@/components/layout/PwaInstallPrompt';
+import { LanguageProvider } from '@/context/LanguageContext';
 
 export const metadata: Metadata = {
   title: 'EarnSpace — Create • Connect • Grow • Earn',
@@ -22,7 +25,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
         <GlobalHeadAdInjector />
-        {children}
+        <AdBlockDetector />
+        <PwaInstallPrompt />
+        <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>
   );

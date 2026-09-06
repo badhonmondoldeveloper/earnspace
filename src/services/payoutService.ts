@@ -4,7 +4,7 @@ import { FinancialLedgerService } from './financialLedgerService';
 export function validatePayoutDestination(provider: string, identifier: string, metadata?: Record<string, any>): { valid: boolean; message?: string } {
   const p = provider.toLowerCase();
 
-  if (p === 'bkash' || p === 'nagad') {
+  if (p === 'bkash' || p === 'nagad' || p === 'upay') {
     if (!/^01[3-9]\d{8}$/.test(identifier.trim())) {
       return { valid: false, message: `Invalid Bangladeshi mobile number format for ${provider}. Must be 11 digits starting with 01.` };
     }
