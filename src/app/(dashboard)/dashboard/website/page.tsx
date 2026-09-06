@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import {
   Plus, Trash2, Globe, Eye, Save, GripVertical, Sparkles, CheckCircle2,
   ArrowUp, ArrowDown, Layout, Palette, Image as ImageIcon, Video, Link2,
-  Briefcase, BookOpen, Mail, Sliders
+  Briefcase, BookOpen, Mail, Sliders, Edit3, User
 } from 'lucide-react';
 import Link from 'next/link';
+import { FacebookProfileSpace } from '@/components/space/FacebookProfileSpace';
+import { EditFacebookProfileModal } from '@/components/modals/EditFacebookProfileModal';
 
 export interface Block {
   id: string;
@@ -26,15 +28,28 @@ const THEMES = [
 
 export default function WebsiteBuilderPage() {
   const [page, setPage] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [pageTitle, setPageTitle] = useState('');
   const [pageDescription, setPageDescription] = useState('');
   const [selectedTheme, setSelectedTheme] = useState('modern');
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
-  const [activeTab, setActiveTab] = useState<'editor' | 'settings'>('editor');
+  const [activeTab, setActiveTab] = useState<'preview' | 'editor' | 'settings'>('preview');
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
 
   useEffect(() => {
+    fetch('/api/v1/auth/me')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.data) {
+          setUser(data.data);
+          setProfile(data.data.profile || {});
+        }
+      })
+      .catch(() => {});
+
     fetch('/api/v1/pages')
       .then((res) => res.json())
       .then((data) => {
@@ -133,20 +148,28 @@ export default function WebsiteBuilderPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      {/* Header */}
+    <div className="space-y-6 max-w-6xl mx-auto">
+      {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <Globe className="w-6 h-6 text-brand-500" />
-            <span>Digital Space Builder</span>
+            <span>Facebook Profile Digital Space Studio</span>
           </h1>
           <p className="text-xs text-slate-500">
-            Build your personal dynamic website live at <code className="text-brand-500 font-mono">/space/{page?.slug || 'username'}</code>
+            Customize your 1:1 Facebook Profile Space live at <code className="text-brand-500 font-mono">/space/{page?.slug || user?.username || 'username'}</code>
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={() => setIsEditProfileModalOpen(true)}
+            className="px-4 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition flex items-center gap-1.5 shadow-md shadow-blue-600/20"
+          >
+            <Edit3 className="w-4 h-4" />
+            <span>Edit Facebook Profile Info</span>
+          </button>
+
           {page && (
             <Link
               href={`/space/${page.slug}`}
@@ -154,7 +177,7 @@ export default function WebsiteBuilderPage() {
               className="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-1.5"
             >
               <Eye className="w-4 h-4" />
-              <span>Preview Space</span>
+              <span>Open Live Space</span>
             </Link>
           )}
 
@@ -170,26 +193,37 @@ export default function WebsiteBuilderPage() {
       </div>
 
       {successMsg && (
-        <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2">
+        <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2 font-bold">
           <CheckCircle2 className="w-4 h-4" />
           <span>{successMsg}</span>
         </div>
       )}
 
-      {/* Editor / Settings Nav Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 text-xs font-semibold">
+      {/* Navigation Tabs */}
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 text-xs font-semibold overflow-x-auto no-scrollbar">
+        <button
+          onClick={() => setActiveTab('preview')}
+          className={`pb-2 px-3 transition border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
+            activeTab === 'preview' ? 'border-brand-500 text-brand-500' : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <User className="w-4 h-4" />
+          <span>Facebook Profile Live Preview</span>
+        </button>
+
         <button
           onClick={() => setActiveTab('editor')}
-          className={`pb-2 px-3 transition border-b-2 flex items-center gap-1.5 ${
+          className={`pb-2 px-3 transition border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
             activeTab === 'editor' ? 'border-brand-500 text-brand-500' : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <Layout className="w-4 h-4" />
-          <span>Block Layout Editor</span>
+          <span>Block Layout Builder</span>
         </button>
+
         <button
           onClick={() => setActiveTab('settings')}
-          className={`pb-2 px-3 transition border-b-2 flex items-center gap-1.5 ${
+          className={`pb-2 px-3 transition border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
             activeTab === 'settings' ? 'border-brand-500 text-brand-500' : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
@@ -198,9 +232,21 @@ export default function WebsiteBuilderPage() {
         </button>
       </div>
 
+      {/* TAB 1: FACEBOOK PROFILE LIVE PREVIEW */}
+      {activeTab === 'preview' && (
+        <div className="rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xl bg-white dark:bg-slate-950">
+          <FacebookProfileSpace
+            user={user || { username: 'creator' }}
+            profile={profile || {}}
+            blocks={blocks}
+            isOwner={true}
+          />
+        </div>
+      )}
+
+      {/* TAB 2: SETTINGS */}
       {activeTab === 'settings' && (
         <div className="space-y-6">
-          {/* Theme Selection */}
           <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Palette className="w-4 h-4 text-brand-500" />
@@ -224,7 +270,6 @@ export default function WebsiteBuilderPage() {
             </div>
           </div>
 
-          {/* Title & Description */}
           <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white">SEO & Space Details</h3>
             <div className="space-y-3">
@@ -253,9 +298,9 @@ export default function WebsiteBuilderPage() {
         </div>
       )}
 
+      {/* TAB 3: BLOCK LAYOUT EDITOR */}
       {activeTab === 'editor' && (
         <div className="space-y-6">
-          {/* Add Block Options */}
           <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
             <span className="text-xs font-semibold text-slate-500 block">Add Dynamic Section Block:</span>
             <div className="flex flex-wrap items-center gap-2">
@@ -318,7 +363,6 @@ export default function WebsiteBuilderPage() {
             </div>
           </div>
 
-          {/* Blocks List Editor */}
           <div className="space-y-4">
             {blocks.length === 0 ? (
               <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs text-slate-400 space-y-2">
@@ -382,7 +426,6 @@ export default function WebsiteBuilderPage() {
                       </div>
                     </div>
 
-                    {/* HERO EDIT */}
                     {block.type === 'hero' && (
                       <div className="space-y-3">
                         <div className="grid sm:grid-cols-2 gap-3">
@@ -405,137 +448,6 @@ export default function WebsiteBuilderPage() {
                             />
                           </div>
                         </div>
-                        <div className="grid sm:grid-cols-2 gap-3">
-                          <div>
-                            <label className="text-[11px] font-semibold text-slate-500">CTA Button Text</label>
-                            <input
-                              type="text"
-                              value={content.ctaText || ''}
-                              onChange={(e) => handleUpdateBlockContent(index, { ...content, ctaText: e.target.value })}
-                              className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[11px] font-semibold text-slate-500">CTA Button Link</label>
-                            <input
-                              type="text"
-                              value={content.ctaUrl || ''}
-                              onChange={(e) => handleUpdateBlockContent(index, { ...content, ctaUrl: e.target.value })}
-                              className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* TEXT EDIT */}
-                    {block.type === 'text' && (
-                      <div className="space-y-3">
-                        <div>
-                          <label className="text-[11px] font-semibold text-slate-500">Section Header</label>
-                          <input
-                            type="text"
-                            value={content.title || ''}
-                            onChange={(e) => handleUpdateBlockContent(index, { ...content, title: e.target.value })}
-                            className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[11px] font-semibold text-slate-500">Body Content</label>
-                          <textarea
-                            rows={3}
-                            value={content.body || ''}
-                            onChange={(e) => handleUpdateBlockContent(index, { ...content, body: e.target.value })}
-                            className="w-full p-3 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white resize-none"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* LINKS EDIT */}
-                    {block.type === 'links' && (
-                      <div className="space-y-3">
-                        <div>
-                          <label className="text-[11px] font-semibold text-slate-500">Section Header</label>
-                          <input
-                            type="text"
-                            value={content.title || ''}
-                            onChange={(e) => handleUpdateBlockContent(index, { ...content, title: e.target.value })}
-                            className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-[11px] font-semibold text-slate-500">Custom Links</label>
-                          {(content.links || []).map((linkItem: any, lIdx: number) => (
-                            <div key={lIdx} className="flex gap-2 items-center">
-                              <input
-                                type="text"
-                                placeholder="Link Title"
-                                value={linkItem.title}
-                                onChange={(e) => {
-                                  const updatedLinks = [...content.links];
-                                  updatedLinks[lIdx].title = e.target.value;
-                                  handleUpdateBlockContent(index, { ...content, links: updatedLinks });
-                                }}
-                                className="flex-1 px-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
-                              />
-                              <input
-                                type="text"
-                                placeholder="URL (https://...)"
-                                value={linkItem.url}
-                                onChange={(e) => {
-                                  const updatedLinks = [...content.links];
-                                  updatedLinks[lIdx].url = e.target.value;
-                                  handleUpdateBlockContent(index, { ...content, links: updatedLinks });
-                                }}
-                                className="flex-1 px-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
-                              />
-                              <button
-                                onClick={() => {
-                                  const updatedLinks = content.links.filter((_: any, i: number) => i !== lIdx);
-                                  handleUpdateBlockContent(index, { ...content, links: updatedLinks });
-                                }}
-                                className="p-1 text-rose-500"
-                              >
-                                &times;
-                              </button>
-                            </div>
-                          ))}
-                          <button
-                            onClick={() => {
-                              const updatedLinks = [...(content.links || []), { title: 'New Link', url: 'https://' }];
-                              handleUpdateBlockContent(index, { ...content, links: updatedLinks });
-                            }}
-                            className="text-[11px] font-bold text-brand-500 hover:underline"
-                          >
-                            + Add Another Link
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* VIDEO EDIT */}
-                    {block.type === 'video' && (
-                      <div className="space-y-3">
-                        <div>
-                          <label className="text-[11px] font-semibold text-slate-500">Video Title</label>
-                          <input
-                            type="text"
-                            value={content.title || ''}
-                            onChange={(e) => handleUpdateBlockContent(index, { ...content, title: e.target.value })}
-                            className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[11px] font-semibold text-slate-500">Video File or Embed URL</label>
-                          <input
-                            type="text"
-                            value={content.videoUrl || ''}
-                            onChange={(e) => handleUpdateBlockContent(index, { ...content, videoUrl: e.target.value })}
-                            placeholder="https://..."
-                            className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
-                          />
-                        </div>
                       </div>
                     )}
                   </div>
@@ -545,6 +457,15 @@ export default function WebsiteBuilderPage() {
           </div>
         </div>
       )}
+
+      {/* EDIT PROFILE MODAL */}
+      <EditFacebookProfileModal
+        isOpen={isEditProfileModalOpen}
+        onClose={() => setIsEditProfileModalOpen(false)}
+        user={user || { username: 'creator' }}
+        profile={profile || {}}
+        onSaved={(updated) => setProfile((prev: any) => ({ ...prev, ...updated }))}
+      />
     </div>
   );
 }
