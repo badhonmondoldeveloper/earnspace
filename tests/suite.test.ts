@@ -1,16 +1,20 @@
-import { hasAdminPermission, generateAdminToken } from '../src/lib/adminAuth';
-import { validateFileUpload } from '../src/lib/uploadSanitizer';
-import { MonetizationEngine } from '../src/services/monetizationEngine';
-import { FinancialLedgerService } from '../src/services/financialLedgerService';
-import { validatePayoutDestination } from '../src/services/payoutService';
-import { AdProviderManager } from '../src/lib/adProviders/adProviderManager';
-import { SmartAdEngine } from '../src/services/smartAdEngine';
-import { AdRiskEngine } from '../src/services/adRiskEngine';
-import { HouseAdService } from '../src/services/houseAdService';
-import { AdRevenueAttributionService } from '../src/services/adRevenueAttributionService';
-import { CronJobsService } from '../src/services/cronJobsService';
-import { AdminAuditService } from '../src/services/adminAuditService';
-import { prisma } from '../src/lib/prisma';
+process.env.JWT_SECRET ??= 'test-jwt-secret';
+process.env.ADMIN_JWT_SECRET ??= 'test-admin-secret';
+
+const { hasAdminPermission, generateAdminToken } = require('../src/lib/adminAuth');
+const { validateFileUpload } = require('../src/lib/uploadSanitizer');
+const { normalizeLoginIdentifier, normalizeUsername } = require('../src/lib/auth');
+const { MonetizationEngine } = require('../src/services/monetizationEngine');
+const { FinancialLedgerService } = require('../src/services/financialLedgerService');
+const { validatePayoutDestination } = require('../src/services/payoutService');
+const { AdProviderManager } = require('../src/lib/adProviders/adProviderManager');
+const { SmartAdEngine } = require('../src/services/smartAdEngine');
+const { AdRiskEngine } = require('../src/services/adRiskEngine');
+const { HouseAdService } = require('../src/services/houseAdService');
+const { AdRevenueAttributionService } = require('../src/services/adRevenueAttributionService');
+const { CronJobsService } = require('../src/services/cronJobsService');
+const { AdminAuditService } = require('../src/services/adminAuditService');
+const { prisma } = require('../src/lib/prisma');
 
 let passed = 0;
 let failed = 0;
@@ -35,6 +39,8 @@ async function runAllTests() {
   assert(!hasAdminPermission('Moderator', 'users.ban'), 'Moderator restricted from full users.ban permission');
   assert(!hasAdminPermission('Moderator', 'finance.approve'), 'Moderator blocked from finance.approve permission');
   assert(hasAdminPermission('Finance Manager', 'finance.approve'), 'Finance Manager has finance.approve permission');
+  assert(normalizeLoginIdentifier('  ADMIN@EXAMPLE.COM  ') === 'admin@example.com', 'Login identifier is trimmed and lowercased');
+  assert(normalizeUsername('  My_User_01  ') === 'my_user_01', 'Registration username is normalized before persistence');
 
   const token = generateAdminToken({
     adminId: 'admin-123',

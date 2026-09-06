@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { hashPassword, setSessionCookie, createUserSession } from '@/lib/auth';
+import { hashPassword, setSessionCookie, createUserSession, normalizeEmail, normalizeUsername } from '@/lib/auth';
 import { successResponse, errorResponse } from '@/lib/response';
 import { registerSchema } from '@/validations/auth.schema';
 import { RateLimitService } from '@/services/rateLimitService';
@@ -25,8 +25,8 @@ export async function POST(req: NextRequest) {
     }
 
     const { fullName, username, email, password } = validation.data;
-    const normalizedEmail = email.toLowerCase().trim();
-    const normalizedUsername = username.toLowerCase().trim();
+    const normalizedEmail = normalizeEmail(email);
+    const normalizedUsername = normalizeUsername(username);
 
     // Check existing email or username
     const existingUser = await prisma.user.findFirst({

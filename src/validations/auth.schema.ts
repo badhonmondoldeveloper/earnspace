@@ -1,17 +1,19 @@
 import { z } from 'zod';
-import { RESERVED_USERNAMES } from '@/lib/auth';
+import { RESERVED_USERNAMES, normalizeUsername, normalizeEmail, normalizeLoginIdentifier } from '@/lib/auth';
 
 export const registerSchema = z.object({
-  fullName: z.string().min(2, 'Full name must be at least 2 characters').max(60),
+  fullName: z.string().trim().min(2, 'Full name must be at least 2 characters').max(60),
   username: z
     .string()
+    .trim()
+    .toLowerCase()
     .min(3, 'Username must be at least 3 characters')
     .max(30, 'Username cannot exceed 30 characters')
     .regex(/^[a-z0-9_]+$/, 'Username can only contain lowercase letters, numbers, and underscores')
     .refine((val) => !RESERVED_USERNAMES.includes(val.toLowerCase()), {
       message: 'This username is reserved by the system',
     }),
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().trim().toLowerCase().email('Please enter a valid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -20,7 +22,7 @@ export const registerSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  emailOrUsername: z.string().min(1, 'Email or username is required'),
+  emailOrUsername: z.string().trim().toLowerCase().min(1, 'Email or username is required'),
   password: z.string().min(1, 'Password is required'),
 });
 
