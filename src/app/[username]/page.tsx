@@ -19,6 +19,8 @@ import {
 } from '@/components/space';
 import UniversalCreateModal from '@/components/content/UniversalCreateModal';
 import { StoryViewerModal } from '@/components/content/StoryViewerModal';
+import { FacebookPostCard } from '@/components/social/FacebookPostCard';
+import { SmartAdSlot } from '@/components/ads/SmartAdSlot';
 import { uploadMedia } from '@/services/mediaUploadService';
 import {
   ThumbsUp,
@@ -287,6 +289,7 @@ export default function UserProfilePage({ params }: { params: { username: string
               <div className="space-y-6">
                 <SpaceSocialLinks socialLinks={profile.socialLinks} website={profile.website} />
                 <SpaceReferralHub referralCode={profileData.referralCode} username={username} />
+                <SmartAdSlot slotName="PERSONAL_SPACE_SIDEBAR" creatorId={profileData.id} />
               </div>
 
               {/* Center Feed */}
@@ -304,28 +307,11 @@ export default function UserProfilePage({ params }: { params: { username: string
                       No posts published on this space yet.
                     </div>
                   ) : (
-                    posts.map((post: any) => (
-                      <div key={post.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-3 shadow-lg">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={profile.avatar || '/default-avatar.png'}
-                            alt={profile.fullName}
-                            className="w-10 h-10 rounded-full object-cover border border-slate-700"
-                          />
-                          <div>
-                            <div className="text-xs font-bold text-white">{profile.fullName || username}</div>
-                            <div className="text-[10px] text-slate-400">
-                              {new Date(post.createdAt).toLocaleDateString()}
-                            </div>
-                          </div>
-                        </div>
-
-                        <p className="text-xs text-slate-200 leading-relaxed whitespace-pre-line">{post.content}</p>
-
-                        {post.media && post.media.length > 0 && (
-                          <div className="rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 max-h-96">
-                            <img src={post.media[0].url} alt="Media" className="w-full h-full object-cover" />
-                          </div>
+                    posts.map((post: any, idx: number) => (
+                      <div key={post.id} className="space-y-4">
+                        <FacebookPostCard post={{ ...post, user: { id: profileData.id, username, fullName: profile.fullName, avatar: profile.avatar } }} />
+                        {(idx + 1) % 2 === 0 && (
+                          <SmartAdSlot slotName="PERSONAL_SPACE_CONTENT" creatorId={profileData.id} className="my-3" />
                         )}
                       </div>
                     ))

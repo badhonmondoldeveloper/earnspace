@@ -21,6 +21,8 @@ import Link from 'next/link';
 import UniversalCreateModal from '@/components/content/UniversalCreateModal';
 import { PostReactionPicker, REACTIONS } from '@/components/content/PostReactionPicker';
 import { StoryViewerModal } from '@/components/content/StoryViewerModal';
+import { FacebookPostCard } from '@/components/social/FacebookPostCard';
+import { SmartAdSlot } from '@/components/ads/SmartAdSlot';
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
@@ -363,189 +365,13 @@ export default function DashboardPage() {
             <p className="text-[11px] text-slate-400">Be the first creator to post or follow active members.</p>
           </div>
         ) : (
-          posts.map((item) => (
-            <div key={item.id} className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden space-y-3 p-4">
-              {/* Post Header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Link href={`/@${item.user?.username}`} className="w-10 h-10 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center overflow-hidden shrink-0 border border-indigo-500">
-                    {item.user?.profile?.avatar ? (
-                      <img src={item.user.profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                    ) : (
-                      item.user?.username?.[0]?.toUpperCase() || 'U'
-                    )}
-                  </Link>
-                  <div>
-                    <Link href={`/@${item.user?.username}`} className="text-xs font-bold text-slate-900 dark:text-white hover:underline flex items-center gap-1">
-                      <span>{item.user?.profile?.fullName || item.user?.username}</span>
-                      {item.user?.profile?.isVerified && (
-                        <Sparkles className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                      )}
-                    </Link>
-                    <div className="text-[10px] text-slate-400 flex items-center gap-1">
-                      <span>@{item.user?.username}</span>
-                      <span>•</span>
-                      <span>{new Date(item.createdAt).toLocaleDateString()}</span>
-                      <span>•</span>
-                      <Globe className="w-3 h-3" />
-                    </div>
-                  </div>
-                </div>
-
-                <button className="p-1.5 rounded-full text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
-                  <MoreHorizontal className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Post Body Content */}
-              {item.content && (
-                <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap px-1">
-                  {item.content}
-                </p>
+          posts.map((item, idx) => (
+            <React.Fragment key={item.id}>
+              <FacebookPostCard post={item} />
+              {(idx + 1) % 2 === 0 && (
+                <SmartAdSlot slotName="SOCIAL_FEED_MID" className="my-3" />
               )}
-
-              {/* Media Container (Photo, Video, Reel) */}
-              {item.media && item.media.length > 0 && (
-                <div className="rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800">
-                  <img src={item.media[0].url} alt="" className="w-full max-h-96 object-cover" />
-                </div>
-              )}
-
-              {item.isVideo && (
-                <div className="space-y-2">
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">{item.title}</h3>
-                  <Link href={`/video/${item.id}`} className="block aspect-video bg-black rounded-xl overflow-hidden relative group">
-                    <video src={item.videoUrl} poster={item.thumbnailUrl} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition flex items-center justify-center">
-                      <div className="w-12 h-12 rounded-full bg-indigo-600/90 text-white flex items-center justify-center text-xl shadow-lg">
-                        ▶
-                      </div>
-                    </div>
-                  </Link>
-                  <p className="text-xs text-slate-400">{item.description}</p>
-                </div>
-              )}
-
-              {item.isReel && (
-                <div className="space-y-2">
-                  <p className="text-xs text-slate-200">{item.caption}</p>
-                  <Link href="/reels" className="block max-w-xs aspect-[9/16] mx-auto bg-black rounded-xl overflow-hidden relative group">
-                    <video src={item.videoUrl} poster={item.thumbnailUrl} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition flex items-center justify-center">
-                      <div className="w-10 h-10 rounded-full bg-indigo-600/90 text-white flex items-center justify-center text-lg shadow-lg">
-                        ▶
-                      </div>
-                    </div>
-                  </Link>
-                </div>
-              )}
-
-              {/* Reaction & Comments Counter Row */}
-              <div className="flex items-center justify-between text-[11px] text-slate-400 px-1 pt-1">
-                <div className="flex items-center gap-1">
-                  <span className="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[9px] font-bold">
-                    👍
-                  </span>
-                  <span className="w-4 h-4 rounded-full bg-rose-500 text-white flex items-center justify-center text-[9px] font-bold">
-                    ❤️
-                  </span>
-                  <span className="ml-1 font-medium">{item._count?.reactions || item.likesCount || 0}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button onClick={() => toggleComments(item.id)} className="hover:underline">
-                    {item._count?.comments || item.commentsCount || 0} comments
-                  </button>
-                  <span>{item._count?.shares || 0} shares</span>
-                </div>
-              </div>
-
-              <hr className="border-slate-100 dark:border-slate-800" />
-
-              {/* Facebook Action Buttons (Like Picker, Comment Toggle, Share Trigger) */}
-              <div className="flex items-center justify-between gap-1 px-1">
-                <PostReactionPicker
-                  postId={item.id}
-                  userReaction={item.userReaction}
-                  onReactionChange={(id, type) => handleReaction(id, type)}
-                />
-
-                <button
-                  onClick={() => toggleComments(item.id)}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition text-xs font-semibold text-slate-500 dark:text-slate-400"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  <span>Comment</span>
-                </button>
-
-                <button
-                  onClick={() => handleOpenShareModal(item.id)}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition text-xs font-semibold text-slate-500 dark:text-slate-400"
-                >
-                  <Share2 className="w-4 h-4" />
-                  <span>Share</span>
-                </button>
-              </div>
-
-              {/* Inline Comments Thread Container */}
-              {openCommentPostId === item.id && (
-                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
-                  {/* New Comment Input Box */}
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center overflow-hidden shrink-0">
-                      {user?.profile?.avatar ? (
-                        <img src={user.profile.avatar} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        user?.username?.[0]?.toUpperCase() || 'U'
-                      )}
-                    </div>
-                    <div className="flex-1 flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-full px-3 py-1.5">
-                      <input
-                        type="text"
-                        placeholder="Write a comment..."
-                        value={commentInput}
-                        onChange={(e) => setCommentInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleAddComment(item.id);
-                        }}
-                        className="w-full bg-transparent border-none text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none ml-1"
-                      />
-                      <button
-                        onClick={() => handleAddComment(item.id)}
-                        disabled={submittingComment || !commentInput.trim()}
-                        className="p-1 rounded-full text-indigo-600 dark:text-indigo-400 disabled:opacity-40"
-                      >
-                        <Send className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Comments List */}
-                  <div className="space-y-2 max-h-60 overflow-y-auto pt-1">
-                    {(postComments[item.id] || []).length === 0 ? (
-                      <p className="text-[11px] text-slate-400 text-center py-2">No comments yet. Write the first comment!</p>
-                    ) : (
-                      (postComments[item.id] || []).map((c: any) => (
-                        <div key={c.id} className="flex gap-2 text-xs">
-                          <div className="w-7 h-7 rounded-full bg-indigo-600 text-white font-bold text-[10px] flex items-center justify-center overflow-hidden shrink-0 mt-0.5">
-                            {c.user?.profile?.avatar ? (
-                              <img src={c.user.profile.avatar} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              c.user?.username?.[0]?.toUpperCase() || 'U'
-                            )}
-                          </div>
-                          <div className="flex-1 bg-slate-100 dark:bg-slate-800 p-2.5 rounded-2xl">
-                            <span className="font-bold text-slate-900 dark:text-white block text-[11px]">
-                              {c.user?.profile?.fullName || c.user?.username}
-                            </span>
-                            <p className="text-slate-700 dark:text-slate-200 mt-0.5 text-xs">{c.content}</p>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+            </React.Fragment>
           ))
         )}
       </div>
