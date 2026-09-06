@@ -30,6 +30,9 @@ export default function UltraProAdminAdsPage() {
             </h1>
           </div>
           <div className="flex items-center gap-2">
+            <Link href="/admin/ads/house-ads" className="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition shadow-md shadow-indigo-600/20">
+              ⚡ House Ads & SmartLinks
+            </Link>
             <Link href="/admin/revenue/providers" className="px-3 py-2 bg-slate-900 border border-slate-800 text-xs font-semibold rounded-lg hover:border-slate-700 transition">
               Ad Providers
             </Link>
