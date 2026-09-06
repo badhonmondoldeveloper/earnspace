@@ -52,7 +52,7 @@ export function FacebookProfileSpace({
   isOwner = false,
 }: FacebookProfileSpaceProps) {
   const [profile, setProfile] = useState<any>(initialProfile || {});
-  const [activeTab, setActiveTab] = useState<'posts' | 'about' | 'followers' | 'photos' | 'videos' | 'reels' | 'referrals'>('posts');
+  const [activeTab, setActiveTab] = useState<'posts' | 'store' | 'memberships' | 'about' | 'followers' | 'photos' | 'videos' | 'reels' | 'referrals'>('posts');
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
@@ -118,25 +118,21 @@ export function FacebookProfileSpace({
                   <button
                     onClick={() => setIsEditProfileOpen(true)}
                     className="absolute bottom-1 right-1 p-2 rounded-full bg-slate-800 text-white hover:bg-slate-700 border-2 border-white dark:border-slate-900 shadow-md transition"
-                    title="Update Profile Picture"
                   >
                     <Camera className="w-4 h-4" />
                   </button>
                 )}
               </div>
 
-              {/* Profile Titles */}
-              <div className="space-y-1 pb-1">
-                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center justify-center sm:justify-start gap-2">
-                  {authorName}
-                  {profile?.isVerified && <Sparkles className="w-5 h-5 text-amber-400 fill-amber-400" />}
+              {/* Name & Bio Tagline */}
+              <div className="space-y-1 pb-2">
+                <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 justify-center sm:justify-start">
+                  <span>{authorName}</span>
+                  <Sparkles className="w-5 h-5 text-amber-500 fill-amber-500 shrink-0" />
                 </h1>
-                <p className="text-xs font-mono text-indigo-500 font-bold">@{user?.username}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium max-w-md">
-                  {profile?.bio || 'Digital Creator & Entrepreneur'}
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  @{user?.username || 'username'} • {profile?.category || 'Creator'}
                 </p>
-
-                {/* Followers Counter & Avatar Stack */}
                 <div className="flex items-center justify-center sm:justify-start gap-2 pt-1">
                   <div className="flex -space-x-2 overflow-hidden">
                     <div className="w-6 h-6 rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center border border-white dark:border-slate-900">A</div>
@@ -195,6 +191,8 @@ export function FacebookProfileSpace({
           <div className="flex items-center justify-start sm:justify-start gap-1 overflow-x-auto px-4 py-1 no-scrollbar text-xs font-bold">
             {[
               { id: 'posts', label: 'Posts' },
+              { id: 'store', label: 'Digital Store 🛍️' },
+              { id: 'memberships', label: 'VIP Memberships ⭐' },
               { id: 'about', label: 'About' },
               { id: 'followers', label: `Followers (${profile?.followersCount || 128})` },
               { id: 'photos', label: `Photos (${samplePhotos.length})` },
@@ -396,6 +394,108 @@ export function FacebookProfileSpace({
                   ))
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB: DIGITAL STORE */}
+        {activeTab === 'store' && (
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+              <div>
+                <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>Digital Product Store</span>
+                  <span className="text-xs bg-indigo-500/10 text-indigo-500 font-bold px-2 py-0.5 rounded-full">Instant Download</span>
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Exclusive e-books, templates, presets, and digital assets by {authorName}.</p>
+              </div>
+
+              {isOwner && (
+                <Link
+                  href="/dashboard/products"
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition self-start sm:self-auto"
+                >
+                  + Manage Store
+                </Link>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {[
+                { title: 'Master Creator Playbook (PDF)', price: '৳499', category: 'E-Book', sales: 48 },
+                { title: 'Premere Pro Video Presets Pack', price: '৳299', category: 'Video Assets', sales: 112 },
+                { title: 'Monetization & Ads Strategy Guide', price: '৳199', category: 'Guide', sales: 84 },
+              ].map((item, i) => (
+                <div key={i} className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-4 flex flex-col justify-between space-y-3 hover:border-indigo-500/50 transition">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">{item.category}</span>
+                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">{item.title}</h3>
+                    <p className="text-[11px] text-slate-500">{item.sales} downloads • Verified Digital File</p>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-700">
+                    <span className="text-base font-black text-indigo-600 dark:text-indigo-400">{item.price}</span>
+                    <button
+                      onClick={() => alert(`Purchase ${item.title} via bKash / Wallet`)}
+                      className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-sm transition"
+                    >
+                      Buy Now
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: CREATOR MEMBERSHIPS */}
+        {activeTab === 'memberships' && (
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-6 shadow-sm">
+            <div className="text-center max-w-lg mx-auto space-y-2 border-b border-slate-200 dark:border-slate-800 pb-4">
+              <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 text-xs font-bold">Exclusive Access</span>
+              <h2 className="text-xl font-black text-slate-900 dark:text-white">Become a VIP Supporter of {authorName}</h2>
+              <p className="text-xs text-slate-500">Unlock subscriber-only badges, secret posts, 1-on-1 chats & priority replies.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                { name: 'Supporter', price: '৳99', period: '/month', badge: 'Silver', perks: ['Supporter Badge on comments', 'Subscriber-only post feed', 'Direct comment replies'] },
+                { name: 'VIP Member', price: '৳299', period: '/month', badge: 'Gold', perks: ['Gold Supporter Badge', 'All Supporter perks', 'Direct 1-on-1 messaging', 'Early video releases'] },
+                { name: 'Elite Club', price: '৳599', period: '/month', badge: 'Platinum', perks: ['Platinum Supporter Badge', 'All VIP perks', 'Monthly 1-on-1 Q&A Call', 'Free Digital Downloads'] },
+              ].map((tier, i) => (
+                <div key={i} className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 rounded-3xl p-5 flex flex-col justify-between space-y-4 hover:border-amber-500/50 transition relative overflow-hidden">
+                  {i === 1 && (
+                    <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-[10px]">MOST POPULAR</span>
+                  )}
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">{tier.badge} Tier</span>
+                      <h3 className="text-lg font-black text-slate-900 dark:text-white">{tier.name}</h3>
+                    </div>
+
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-black text-slate-900 dark:text-white">{tier.price}</span>
+                      <span className="text-xs text-slate-400 font-semibold">{tier.period}</span>
+                    </div>
+
+                    <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-300 font-medium">
+                      {tier.perks.map((perk, pIdx) => (
+                        <li key={pIdx} className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                          <span>{perk}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <button
+                    onClick={() => alert(`Join ${tier.name} (৳${tier.price}/mo) via bKash / Wallet`)}
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-90 text-slate-950 font-black text-xs shadow-md transition"
+                  >
+                    Join {tier.name}
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         )}

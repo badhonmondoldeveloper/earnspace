@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma';
 
 export interface RecordTransactionParams {
   userId: string;
-  type: 'earning' | 'referral' | 'bonus' | 'withdrawal' | 'reversal' | 'refund' | 'adjustment' | 'fee' | 'fan_support';
+  type: 'earning' | 'referral' | 'bonus' | 'withdrawal' | 'reversal' | 'refund' | 'adjustment' | 'fee' | 'fan_support' | 'product_sale' | 'fan_subscription' | 'affiliate_commission' | 'deposit';
   amount: number;
   currency?: string;
   referenceType?: string;
