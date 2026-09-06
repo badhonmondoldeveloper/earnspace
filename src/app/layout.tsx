@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import './globals.css';
 import { GlobalHeadAdInjector } from '@/components/ads/GlobalHeadAdInjector';
 import { AdBlockDetector } from '@/components/ads/AdBlockDetector';
@@ -35,6 +36,11 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+        <Script
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9249570729862532"
+          strategy="beforeInteractive"
+          crossOrigin="anonymous"
+        />
         <GlobalHeadAdInjector />
         <AdBlockDetector />
         <PwaInstallPrompt />
