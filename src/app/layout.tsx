@@ -1,3 +1,4 @@
+import React from 'react';
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import './globals.css';
@@ -42,12 +43,27 @@ export default function RootLayout({
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9249570729862532"
           crossOrigin="anonymous"
         />
+        <script
+          async
+          custom-element="amp-auto-ads"
+          src="https://cdn.ampproject.org/v0/amp-auto-ads-0.1.js"
+        />
       </head>
       <body className="antialiased min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-16 lg:pb-0 overflow-x-hidden">
+        {/* Google AMP Auto Ads Tag */}
+        {React.createElement('amp-auto-ads', {
+          type: 'adsense',
+          'data-ad-client': 'ca-pub-9249570729862532',
+        })}
         <Script
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9249570729862532"
           strategy="beforeInteractive"
           crossOrigin="anonymous"
+        />
+        <Script
+          src="https://cdn.ampproject.org/v0/amp-auto-ads-0.1.js"
+          strategy="beforeInteractive"
+          custom-element="amp-auto-ads"
         />
         <GlobalHeadAdInjector />
         <AdBlockDetector />

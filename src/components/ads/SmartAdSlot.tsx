@@ -61,6 +61,15 @@ function ScriptAdContainer({ codeSnippet }: { codeSnippet: string }) {
       }
       container.appendChild(newScript);
     });
+
+    // Auto-initialize Google AdSense ins elements
+    try {
+      if (container.querySelector('.adsbygoogle')) {
+        ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+      }
+    } catch (e) {
+      // Ignore if AdSense script is already processing
+    }
   }, [codeSnippet]);
 
   return <div ref={containerRef} className="w-full overflow-hidden" />;
