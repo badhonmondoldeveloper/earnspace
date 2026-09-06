@@ -23,6 +23,41 @@ export default function UserProfilePage({ params }: { params: { username: string
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showCoverModal, setShowCoverModal] = useState(false);
 
+  // Edit Profile Modal State
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editFullName, setEditFullName] = useState('');
+  const [editBio, setEditBio] = useState('');
+  const [editLocation, setEditLocation] = useState('');
+  const [editWebsite, setEditWebsite] = useState('');
+  const [editCategory, setEditCategory] = useState('General');
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const handleSaveEditProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingEdit(true);
+    try {
+      const res = await fetch('/api/v1/profile/update', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: editFullName,
+          bio: editBio,
+          location: editLocation,
+          website: editWebsite,
+          category: editCategory,
+        }),
+      });
+      if (res.ok) {
+        setShowEditModal(false);
+        fetchProfile();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   useEffect(() => {
     fetchProfile();
   }, [username]);
@@ -237,6 +272,23 @@ export default function UserProfilePage({ params }: { params: { username: string
                     <MessageSquare className="w-4 h-4" />
                   </a>
                 </>
+              )}
+
+              {profileData.isOwnProfile && (
+                <button
+                  onClick={() => {
+                    setEditFullName(profile.fullName || '');
+                    setEditBio(profile.bio || '');
+                    setEditLocation(profile.location || '');
+                    setEditWebsite(profile.website || '');
+                    setEditCategory(profile.category || 'General');
+                    setShowEditModal(true);
+                  }}
+                  className="px-4 py-2 rounded-full bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold hover:bg-slate-700 transition flex items-center gap-1.5"
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                  <span>Edit Profile</span>
+                </button>
               )}
 
               <a
@@ -474,6 +526,100 @@ export default function UserProfilePage({ params }: { params: { username: string
                   className="px-4 py-2 text-xs font-semibold rounded-lg bg-indigo-600 text-white"
                 >
                   Save Cover
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Profile Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-lg space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-lg font-bold text-white">Edit Profile Details</h3>
+              <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-white text-xl">
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleSaveEditProfile} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-400">Full Name</label>
+                  <input
+                    type="text"
+                    value={editFullName}
+                    onChange={(e) => setEditFullName(e.target.value)}
+                    required
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-400">Category</label>
+                  <select
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs"
+                  >
+                    <option value="General">General</option>
+                    <option value="Creator">Creator</option>
+                    <option value="Tech & Science">Tech & Science</option>
+                    <option value="Education">Education</option>
+                    <option value="Vlogger">Vlogger</option>
+                    <option value="Business & Entrepreneur">Business & Entrepreneur</option>
+                    <option value="Artist & Designer">Artist & Designer</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-400">Bio</label>
+                <textarea
+                  rows={3}
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-xs resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-400">Location</label>
+                  <input
+                    type="text"
+                    value={editLocation}
+                    onChange={(e) => setEditLocation(e.target.value)}
+                    placeholder="e.g. Dhaka, Bangladesh"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-400">Website URL</label>
+                  <input
+                    type="text"
+                    value={editWebsite}
+                    onChange={(e) => setEditWebsite(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className="px-5 py-2 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30"
+                >
+                  {savingEdit ? 'Saving...' : 'Save Profile Changes'}
                 </button>
               </div>
             </form>

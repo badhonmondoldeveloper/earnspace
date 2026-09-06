@@ -60,6 +60,15 @@ export default function SettingsPage() {
     setErrorMsg('');
 
     try {
+      const res = await fetch('/api/v1/profile/update', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullName, bio, location, website }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to update profile');
+      }
       setMsg('Profile settings updated successfully!');
       setTimeout(() => setMsg(''), 4000);
     } catch (e: any) {

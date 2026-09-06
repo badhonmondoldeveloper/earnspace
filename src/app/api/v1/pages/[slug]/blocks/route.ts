@@ -19,37 +19,70 @@ export async function POST(req: NextRequest, { params }: { params: { slug: strin
     }
 
     const body = await req.json();
-    const { blocks } = body; // Array of block objects
+    const { blocks, settings, title, description } = body;
 
-    if (!Array.isArray(blocks)) {
-      return errorResponse('Invalid blocks array', 400);
+    // Update page title/description if provided
+    if (title !== undefined || description !== undefined) {
+      await prisma.page.update({
+        where: { id: page.id },
+        data: {
+          ...(title !== undefined && { title }),
+          ...(description !== undefined && { description }),
+        },
+      });
     }
 
-    // Replace existing page blocks in transaction
+    // Replace existing page blocks & update settings in transaction
     await prisma.$transaction(async (tx) => {
-      await tx.pageBlock.deleteMany({
-        where: { pageId: page.id },
-      });
+      if (Array.isArray(blocks)) {
+        await tx.pageBlock.deleteMany({
+          where: { pageId: page.id },
+        });
 
-      if (blocks.length > 0) {
-        await tx.pageBlock.createMany({
-          data: blocks.map((b: any, index: number) => ({
+        if (blocks.length > 0) {
+          await tx.pageBlock.createMany({
+            data: blocks.map((b: any, index: number) => ({
+              pageId: page.id,
+              type: b.type,
+              position: index,
+              contentJson: typeof b.contentJson === 'string' ? b.contentJson : JSON.stringify(b.contentJson || {}),
+              visibility: b.visibility !== undefined ? b.visibility : true,
+            })),
+          });
+        }
+      }
+
+      if (settings && typeof settings === 'object') {
+        await tx.pageSetting.upsert({
+          where: { pageId: page.id },
+          create: {
             pageId: page.id,
-            type: b.type,
-            position: index,
-            contentJson: typeof b.contentJson === 'string' ? b.contentJson : JSON.stringify(b.contentJson || {}),
-            visibility: b.visibility !== undefined ? b.visibility : true,
-          })),
+            theme: settings.theme || 'modern',
+            typography: settings.typography || 'sans',
+            colorsJson: JSON.stringify(settings.colors || {}),
+            layout: settings.layout || 'single-column',
+            customSettingsJson: JSON.stringify(settings.custom || {}),
+          },
+          update: {
+            theme: settings.theme || 'modern',
+            typography: settings.typography || 'sans',
+            colorsJson: JSON.stringify(settings.colors || {}),
+            layout: settings.layout || 'single-column',
+            customSettingsJson: JSON.stringify(settings.custom || {}),
+          },
         });
       }
     });
 
-    const updatedBlocks = await prisma.pageBlock.findMany({
-      where: { pageId: page.id },
-      orderBy: { position: 'asc' },
+    const updatedPage = await prisma.page.findUnique({
+      where: { id: page.id },
+      include: {
+        blocks: { orderBy: { position: 'asc' } },
+        settings: true,
+      },
     });
 
-    return successResponse(updatedBlocks, 'Website blocks saved');
+    return successResponse(updatedPage, 'Website blocks & settings saved successfully');
   } catch (error) {
     console.error('Blocks save error:', error);
     return errorResponse('Internal server error', 500);
