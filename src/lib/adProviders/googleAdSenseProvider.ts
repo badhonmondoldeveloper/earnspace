@@ -3,7 +3,7 @@ import { AdProviderInterface, AdPlacementRequest, AdPlacementResponse } from './
 export class GoogleAdSenseProvider implements AdProviderInterface {
   providerKey = 'google_adsense';
   name = 'Google AdSense';
-  private clientPublisherId = 'ca-pub-earnspace-prod';
+  private clientPublisherId = 'ca-pub-9249570729862532';
 
   async initialize(config: Record<string, any>): Promise<void> {
     if (config.publisherId) {

@@ -25,6 +25,15 @@ export async function GET(req: NextRequest) {
         snippet: p.headCodeSnippet,
       }));
 
+    if (headTags.length === 0) {
+      headTags.push({
+        id: 'default_adsense',
+        providerKey: 'google_adsense',
+        providerType: 'google_adsense',
+        snippet: '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9249570729862532" crossorigin="anonymous"></script>\n<meta name="google-adsense-account" content="ca-pub-9249570729862532">',
+      });
+    }
+
     const response = successResponse(headTags);
     response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=120');
     return response;

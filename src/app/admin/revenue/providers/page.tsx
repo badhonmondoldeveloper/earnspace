@@ -29,7 +29,7 @@ export default function AdminRevenueProvidersPage() {
   const [activeTab, setActiveTab] = useState<'adsense' | 'meta' | 'script_network' | 'custom' | 'direct'>('adsense');
 
   // AdSense Form
-  const [adsensePubId, setAdsensePubId] = useState('');
+  const [adsensePubId, setAdsensePubId] = useState('ca-pub-9249570729862532');
   const [adsenseFeedSlot, setAdsenseFeedSlot] = useState('');
   const [adsenseSidebarSlot, setAdsenseSidebarSlot] = useState('');
   const [enableAutoAds, setEnableAutoAds] = useState(true);
