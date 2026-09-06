@@ -11,9 +11,38 @@ export async function generateMetadata({ params }: { params: { username: string 
 
   if (!user) return { title: 'Space Not Found' };
 
+  const fullName = user.profile?.fullName || user.username;
+  const bio = user.profile?.bio || `Welcome to ${fullName}'s official EarnSpace digital space and blog website.`;
+  const avatar = user.profile?.avatar || 'https://earnspace-chi.vercel.app/og-default.png';
+  const url = `https://earnspace-chi.vercel.app/space/${user.username}`;
+
   return {
-    title: `${user.profile?.fullName || user.username}'s Personal Website — EarnSpace`,
-    description: user.profile?.bio || `Explore ${user.profile?.fullName || user.username}'s official digital space on EarnSpace.`,
+    title: `${fullName} — Official Digital Space & Blog`,
+    description: bio,
+    other: {
+      'google-adsense-account': 'ca-pub-9249570729862532',
+    },
+    openGraph: {
+      title: `${fullName} — Official Digital Space & Blog`,
+      description: bio,
+      url,
+      siteName: 'EarnSpace',
+      images: [
+        {
+          url: avatar,
+          width: 800,
+          height: 800,
+          alt: fullName,
+        },
+      ],
+      type: 'profile',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${fullName} — Official Digital Space & Blog`,
+      description: bio,
+      images: [avatar],
+    },
   };
 }
 

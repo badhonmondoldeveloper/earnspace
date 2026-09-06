@@ -121,15 +121,47 @@ export function PersonalSpaceClientContainer({
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-center gap-3 pt-2">
-            <button
-              onClick={() => setShowTipModal(true)}
-              className={`px-6 py-2.5 rounded-full ${theme.accent} font-bold text-xs shadow-lg transition flex items-center gap-2`}
-            >
-              <span>Support Creator via bKash / Nagad</span>
-              <span>💖</span>
-            </button>
+          {/* Action Buttons & Social Marketing Share Bar */}
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={() => setShowTipModal(true)}
+                className={`px-6 py-2.5 rounded-full ${theme.accent} font-bold text-xs shadow-lg transition flex items-center gap-2`}
+              >
+                <span>Support Creator via bKash / Nagad</span>
+                <span>💖</span>
+              </button>
+            </div>
+
+            {/* Marketing Share Buttons */}
+            <div className="flex items-center justify-center gap-2 pt-2 border-t border-slate-800/60">
+              <span className="text-[11px] text-slate-400 font-medium mr-1">Share Space:</span>
+              <a
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : `https://earnspace-chi.vercel.app/space/${user.username}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-2.5 py-1 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 text-[11px] font-bold transition flex items-center gap-1"
+              >
+                📘 Facebook
+              </a>
+              <a
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out ${authorName}'s official EarnSpace blog website & digital space: https://earnspace-chi.vercel.app/space/${user.username}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-2.5 py-1 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 text-[11px] font-bold transition flex items-center gap-1"
+              >
+                💬 WhatsApp
+              </a>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  alert('Website link copied! Share it on social media to get visitors & ad revenue.');
+                }}
+                className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-bold transition"
+              >
+                🔗 Copy Link
+              </button>
+            </div>
           </div>
         </div>
 
