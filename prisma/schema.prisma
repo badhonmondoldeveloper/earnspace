@@ -1084,7 +1084,8 @@ model AdProvider {
   supportedCountriesJson String  @default("[\"BD\", \"GLOBAL\"]")
   targetingJson         String   @default("{}")
   credentialsJson       String   @default("{}") // Hidden / Encrypted API credentials
-  adCodeSnippet         String?  // HTML code snippet, JS script tags, meta tags, ad unit code
+  adCodeSnippet         String?  // HTML code snippet, JS script tags, body ad unit code
+  headCodeSnippet       String?  // Head script tags, meta tags (e.g. google-adsense-account, facebook-domain-verification)
   secretReference       String?  // Reference key for server secret isolation
   healthStatus          String   @default("healthy") // healthy, degraded, offline
   createdAt             DateTime @default(now())

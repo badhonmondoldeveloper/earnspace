@@ -40,7 +40,18 @@ export async function POST(req: NextRequest) {
       return errorResponse('Permission denied', 403);
     }
 
-    const { name, providerKey, priority, placementsJson, credentialsJson, adCodeSnippet, status } = await req.json();
+    const {
+      name,
+      providerKey,
+      providerType,
+      priority,
+      placementsJson,
+      credentialsJson,
+      adCodeSnippet,
+      headCodeSnippet,
+      status,
+    } = await req.json();
+
     if (!name || !providerKey) {
       return errorResponse('Provider name and key are required', 400);
     }
@@ -49,10 +60,12 @@ export async function POST(req: NextRequest) {
       data: {
         name,
         providerKey,
+        providerType: providerType || 'external_network',
         priority: priority ? parseInt(priority) : 1,
         placementsJson: typeof placementsJson === 'string' ? placementsJson : JSON.stringify(placementsJson || ['SOCIAL_FEED_MID', 'SIDEBAR_BANNER']),
         credentialsJson: typeof credentialsJson === 'string' ? credentialsJson : JSON.stringify(credentialsJson || {}),
         adCodeSnippet: adCodeSnippet || null,
+        headCodeSnippet: headCodeSnippet || null,
         status: status || 'active',
       },
     });

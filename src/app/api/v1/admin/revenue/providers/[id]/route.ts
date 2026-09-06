@@ -16,16 +16,21 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     const { id } = params;
     const body = await req.json();
-    const { name, providerKey, priority, placementsJson, adCodeSnippet, status } = body;
+    const { name, providerKey, providerType, priority, placementsJson, adCodeSnippet, headCodeSnippet, credentialsJson, status } = body;
 
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
     if (providerKey !== undefined) updateData.providerKey = providerKey;
+    if (providerType !== undefined) updateData.providerType = providerType;
     if (priority !== undefined) updateData.priority = parseInt(priority);
     if (placementsJson !== undefined) {
       updateData.placementsJson = typeof placementsJson === 'string' ? placementsJson : JSON.stringify(placementsJson);
     }
+    if (credentialsJson !== undefined) {
+      updateData.credentialsJson = typeof credentialsJson === 'string' ? credentialsJson : JSON.stringify(credentialsJson);
+    }
     if (adCodeSnippet !== undefined) updateData.adCodeSnippet = adCodeSnippet;
+    if (headCodeSnippet !== undefined) updateData.headCodeSnippet = headCodeSnippet;
     if (status !== undefined) updateData.status = status;
 
     const provider = await prisma.adProvider.update({

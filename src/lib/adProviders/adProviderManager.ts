@@ -6,7 +6,7 @@ export class AdProviderManager {
     const { slotName } = request;
 
     try {
-      // 1. Fetch active providers ordered by priority (1 = highest priority)
+      // Fetch active providers ordered by priority (1 = highest priority)
       const activeProviders = await prisma.adProvider.findMany({
         where: { status: 'active' },
         orderBy: { priority: 'asc' },
@@ -20,9 +20,9 @@ export class AdProviderManager {
           placements = ['all', 'feed'];
         }
 
-        // Check if provider supports the requested slotName or "all"
         const isSupported = placements.includes(slotName) || placements.includes('all') || placements.includes('feed');
         if (isSupported) {
+          // If code snippet is available (Google AdSense, Adsterra, Custom Snippet)
           if (provider.adCodeSnippet && provider.adCodeSnippet.trim()) {
             return {
               providerKey: provider.providerKey,
@@ -33,13 +33,34 @@ export class AdProviderManager {
               isFallback: false,
             };
           }
+
+          // If direct banner credentials are stored
+          if (provider.providerType === 'direct_banner' && provider.credentialsJson) {
+            try {
+              const creds = JSON.parse(provider.credentialsJson);
+              if (creds.destinationUrl) {
+                return {
+                  providerKey: provider.providerKey,
+                  providerName: provider.name,
+                  slotName,
+                  format: 'banner',
+                  title: creds.title || provider.name,
+                  description: creds.description,
+                  mediaUrl: creds.mediaUrl,
+                  destinationUrl: creds.destinationUrl,
+                  ctaText: creds.ctaText || 'Learn More',
+                  isFallback: false,
+                };
+              }
+            } catch (e) {}
+          }
         }
       }
     } catch (err) {
       console.error('AdProviderManager DB lookup error:', err);
     }
 
-    // 2. Return fallback Native Promotion response if no active code provider matches
+    // Native House Promotion Fallback
     return {
       providerKey: 'house',
       providerName: 'EarnSpace Native Promotion',
