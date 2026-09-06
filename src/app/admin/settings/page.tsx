@@ -199,6 +199,178 @@ export default function AdminSettingsPage() {
         </div>
       </div>
 
+      {/* ADMIN PAYMENT GATEWAYS MANAGER (bKash, Nagad, Rocket, Bank, Crypto/Binance Pay) */}
+      <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-6">
+        <div className="border-b border-slate-800 pb-3 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <Shield className="w-4 h-4 text-emerald-400" />
+              <span>Admin Payment Gateways & Personal Wallet Configurator</span>
+            </h3>
+            <p className="text-xs text-slate-400">
+              Manage platform payout & deposit gateways, toggle methods ON/OFF, and set official wallet numbers/crypto addresses.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-4 text-xs">
+          {/* bKash Gateway */}
+          <div className="p-4 rounded-xl bg-slate-800/80 border border-slate-700 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-pink-400 text-sm">bKash (Personal / Merchant)</span>
+              <button
+                onClick={() => handleSaveSetting('gateway_bkash_status', 'toggle')}
+                className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30 text-[10px]"
+              >
+                Status: ACTIVE (Toggle)
+              </button>
+            </div>
+            <div>
+              <label className="text-[10px] text-slate-400 font-semibold">Official bKash Number</label>
+              <div className="flex gap-2 mt-1">
+                <input
+                  type="text"
+                  defaultValue="01700000000"
+                  id="bkash-num"
+                  className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white"
+                />
+                <button
+                  onClick={() => {
+                    const el = document.getElementById('bkash-num') as HTMLInputElement;
+                    if (el) handleSaveSetting('bkash_number', el.value);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] shrink-0"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Nagad Gateway */}
+          <div className="p-4 rounded-xl bg-slate-800/80 border border-slate-700 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-orange-400 text-sm">Nagad (Personal / Merchant)</span>
+              <button
+                onClick={() => handleSaveSetting('gateway_nagad_status', 'toggle')}
+                className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30 text-[10px]"
+              >
+                Status: ACTIVE (Toggle)
+              </button>
+            </div>
+            <div>
+              <label className="text-[10px] text-slate-400 font-semibold">Official Nagad Number</label>
+              <div className="flex gap-2 mt-1">
+                <input
+                  type="text"
+                  defaultValue="01800000000"
+                  id="nagad-num"
+                  className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white"
+                />
+                <button
+                  onClick={() => {
+                    const el = document.getElementById('nagad-num') as HTMLInputElement;
+                    if (el) handleSaveSetting('nagad_number', el.value);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] shrink-0"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Rocket Gateway */}
+          <div className="p-4 rounded-xl bg-slate-800/80 border border-slate-700 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-purple-400 text-sm">DBBL Rocket</span>
+              <button
+                onClick={() => handleSaveSetting('gateway_rocket_status', 'toggle')}
+                className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30 text-[10px]"
+              >
+                Status: ACTIVE (Toggle)
+              </button>
+            </div>
+            <div>
+              <label className="text-[10px] text-slate-400 font-semibold">Official Rocket Number</label>
+              <div className="flex gap-2 mt-1">
+                <input
+                  type="text"
+                  defaultValue="01900000000-7"
+                  id="rocket-num"
+                  className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white"
+                />
+                <button
+                  onClick={() => {
+                    const el = document.getElementById('rocket-num') as HTMLInputElement;
+                    if (el) handleSaveSetting('rocket_number', el.value);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] shrink-0"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Crypto / Binance Pay Gateway */}
+          <div className="p-4 rounded-xl bg-slate-800/80 border border-slate-700 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-amber-400 text-sm">Crypto / Binance Pay</span>
+              <button
+                onClick={() => handleSaveSetting('gateway_crypto_status', 'toggle')}
+                className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30 text-[10px]"
+              >
+                Status: ACTIVE (Toggle)
+              </button>
+            </div>
+            <div className="space-y-2">
+              <div>
+                <label className="text-[10px] text-slate-400 font-semibold">Binance Pay ID</label>
+                <div className="flex gap-2 mt-0.5">
+                  <input
+                    type="text"
+                    defaultValue="283940192"
+                    id="binance-id"
+                    className="w-full px-3 py-1 rounded-lg bg-slate-900 border border-slate-700 text-white text-[11px]"
+                  />
+                  <button
+                    onClick={() => {
+                      const el = document.getElementById('binance-id') as HTMLInputElement;
+                      if (el) handleSaveSetting('binance_pay_id', el.value);
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] shrink-0"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] text-slate-400 font-semibold">USDT TRC20 Address</label>
+                <div className="flex gap-2 mt-0.5">
+                  <input
+                    type="text"
+                    defaultValue="TY8zK9pX2mLw4QvJ7n3s1d5f8g0h2j4k"
+                    id="usdt-trc"
+                    className="w-full px-3 py-1 rounded-lg bg-slate-900 border border-slate-700 text-white text-[11px]"
+                  />
+                  <button
+                    onClick={() => {
+                      const el = document.getElementById('usdt-trc') as HTMLInputElement;
+                      if (el) handleSaveSetting('usdt_trc20_address', el.value);
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] shrink-0"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Configurable Business Rules */}
       <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
         <h3 className="text-sm font-bold text-white">Dynamic Business Rules</h3>

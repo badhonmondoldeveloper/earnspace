@@ -160,18 +160,19 @@ export function FanSupportModal({
           {/* Payment Method Selector */}
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-2">Select Payment Method</label>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-5 gap-1.5">
               {[
                 { id: 'bkash', label: 'bKash', color: 'from-pink-600 to-pink-700' },
                 { id: 'nagad', label: 'Nagad', color: 'from-orange-600 to-red-600' },
                 { id: 'rocket', label: 'Rocket', color: 'from-purple-600 to-indigo-600' },
+                { id: 'crypto', label: 'Binance', color: 'from-amber-500 to-yellow-600' },
                 { id: 'wallet', label: 'Wallet', color: 'from-emerald-600 to-teal-600' },
               ].map((m) => (
                 <button
                   key={m.id}
                   type="button"
                   onClick={() => setMethod(m.id)}
-                  className={`py-2 text-xs font-bold rounded-xl border transition ${
+                  className={`py-2 text-[11px] font-bold rounded-xl border transition ${
                     method === m.id
                       ? `bg-gradient-to-r ${m.color} text-white border-transparent shadow-md`
                       : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'

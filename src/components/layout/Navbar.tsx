@@ -201,8 +201,6 @@ export function Navbar({ initialUser }: { initialUser?: any }) {
 
           {/* Right: Action Buttons & Facebook Avatar Menu */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <LanguageSwitcher />
-
             <button
               onClick={toggleTheme}
               className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition"
