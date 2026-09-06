@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
+import React, { useEffect, useRef, useState } from 'react';
 import { ExternalLink, ShieldCheck, Sparkles } from 'lucide-react';
 
 interface SmartAdSlotProps {
@@ -24,6 +23,47 @@ interface AdData {
   adUnitCode?: string;
   isHouseAd: boolean;
   trackingToken: string;
+}
+
+/**
+ * ScriptAdContainer dynamically parses and appends <script> and <meta> tags
+ * to ensure injected ad network code snippets (e.g. AdSense, Adsterra, Ezoic) execute properly on React client render.
+ */
+function ScriptAdContainer({ codeSnippet }: { codeSnippet: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current || !codeSnippet) return;
+
+    const container = containerRef.current;
+    container.innerHTML = ''; // Clear previous
+
+    // Parse HTML string into DOM nodes
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(codeSnippet, 'text/html');
+
+    // Append non-script elements
+    Array.from(doc.body.childNodes).forEach((node) => {
+      if (node.nodeName !== 'SCRIPT') {
+        container.appendChild(node.cloneNode(true));
+      }
+    });
+
+    // Execute scripts dynamically
+    const scripts = doc.querySelectorAll('script');
+    scripts.forEach((oldScript) => {
+      const newScript = document.createElement('script');
+      Array.from(oldScript.attributes).forEach((attr) => {
+        newScript.setAttribute(attr.name, attr.value);
+      });
+      if (oldScript.textContent) {
+        newScript.textContent = oldScript.textContent;
+      }
+      container.appendChild(newScript);
+    });
+  }, [codeSnippet]);
+
+  return <div ref={containerRef} className="w-full overflow-hidden" />;
 }
 
 export function SmartAdSlot({
@@ -53,7 +93,7 @@ export function SmartAdSlot({
         const json = await res.json();
         if (isMounted && json.data) {
           setAd(json.data);
-          // Trigger impression tracking
+          // Impression tracking
           fetch('/api/v1/ads/events', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -96,43 +136,49 @@ export function SmartAdSlot({
         contentId,
         contentType,
         creatorId,
-        estimatedRevenue: ad.isHouseAd ? 0 : 0.10,
+        estimatedRevenue: ad.isHouseAd ? 0 : 0.1,
       }),
     }).catch(() => {});
   };
 
   if (loading) {
     return (
-      <div className={`w-full min-h-[100px] bg-slate-900/40 border border-slate-800 rounded-xl animate-pulse flex items-center justify-center text-slate-500 text-xs ${className}`}>
-        <span>Loading Advertisement...</span>
+      <div className={`w-full min-h-[90px] bg-slate-900/40 border border-slate-800 rounded-2xl animate-pulse flex items-center justify-center text-slate-500 text-xs ${className}`}>
+        <span>Loading Sponsored Ad...</span>
       </div>
     );
   }
 
   if (error || !ad) return null;
 
-  // External Ad Code (AdSense / Native script)
+  // Render Ad Code Snippet (AdSense / Adsterra / Custom HTML or JS Script Tags)
   if (ad.adUnitCode) {
     return (
-      <div className={`my-4 p-3 bg-slate-900/60 border border-slate-800 rounded-xl ${className}`}>
-        <div className="flex items-center justify-between text-[10px] text-slate-500 mb-2 uppercase tracking-wider">
-          <span className="flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-400" /> Sponsored</span>
-          <span>EarnSpace Ads</span>
+      <div className={`my-4 p-3 bg-slate-900/80 border border-slate-800 rounded-2xl shadow-md ${className}`}>
+        <div className="flex items-center justify-between text-[10px] text-slate-400 mb-2 uppercase tracking-wider font-semibold">
+          <span className="flex items-center gap-1.5 text-emerald-400">
+            <ShieldCheck className="w-3.5 h-3.5" /> Sponsored
+          </span>
+          <span className="bg-slate-800 px-2 py-0.5 rounded text-[9px] text-slate-400 border border-slate-700">
+            {ad.providerKey.toUpperCase()}
+          </span>
         </div>
-        <div dangerouslySetInnerHTML={{ __html: ad.adUnitCode }} />
+        <ScriptAdContainer codeSnippet={ad.adUnitCode} />
       </div>
     );
   }
 
-  // Direct / House Banner Ad Card
+  // Render Facebook-style Native Sponsored Card
   return (
-    <div className={`my-4 p-4 bg-gradient-to-r from-slate-900/90 via-slate-800/80 to-slate-900/90 border border-slate-700/60 rounded-xl shadow-lg relative overflow-hidden group ${className}`}>
-      <div className="flex items-center justify-between text-[10px] font-semibold text-slate-400 mb-2 uppercase tracking-wider">
+    <div className={`my-4 p-4 bg-gradient-to-r from-slate-900 via-slate-900/90 to-slate-900 border border-slate-800 rounded-2xl shadow-xl relative overflow-hidden group ${className}`}>
+      <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wider">
         <span className="flex items-center gap-1.5 text-amber-400">
-          <Sparkles className="w-3 h-3" />
+          <Sparkles className="w-3.5 h-3.5" />
           {ad.isHouseAd ? 'EarnSpace Partner' : 'Sponsored Content'}
         </span>
-        <span className="bg-slate-800 px-2 py-0.5 rounded text-[9px] text-slate-400 border border-slate-700">Ad</span>
+        <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded text-[9px]">
+          Sponsored
+        </span>
       </div>
 
       <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -140,12 +186,12 @@ export function SmartAdSlot({
           <img
             src={ad.mediaUrl}
             alt={ad.title || 'Sponsored'}
-            className="w-full sm:w-28 h-20 object-cover rounded-lg border border-slate-700/50"
+            className="w-full sm:w-28 h-20 object-cover rounded-xl border border-slate-800 shrink-0"
           />
         )}
-        <div className="flex-1 text-left">
-          {ad.title && <h4 className="text-sm font-bold text-white group-hover:text-amber-400 transition">{ad.title}</h4>}
-          {ad.description && <p className="text-xs text-slate-300 mt-1 line-clamp-2">{ad.description}</p>}
+        <div className="flex-1 text-left space-y-1">
+          {ad.title && <h4 className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">{ad.title}</h4>}
+          {ad.description && <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">{ad.description}</p>}
         </div>
         {ad.destinationUrl && (
           <a
@@ -153,7 +199,7 @@ export function SmartAdSlot({
             target="_blank"
             rel="noopener noreferrer"
             onClick={handleAdClick}
-            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-600 hover:to-emerald-600 text-slate-950 font-bold text-xs rounded-lg flex items-center gap-1.5 transition shrink-0 shadow-md"
+            className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all shrink-0 shadow-lg shadow-indigo-500/20"
           >
             <span>{ad.ctaText || 'Learn More'}</span>
             <ExternalLink className="w-3.5 h-3.5" />
@@ -163,4 +209,3 @@ export function SmartAdSlot({
     </div>
   );
 }
-

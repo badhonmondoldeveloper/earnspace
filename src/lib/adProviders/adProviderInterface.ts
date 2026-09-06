@@ -13,6 +13,7 @@ export interface AdPlacementResponse {
   destinationUrl?: string;
   mediaUrl?: string;
   title?: string;
+  description?: string;
   ctaText?: string;
   adId?: string;
   isFallback: boolean;

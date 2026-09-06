@@ -1,46 +1,55 @@
-import { AdProviderInterface, AdPlacementRequest, AdPlacementResponse } from './adProviderInterface';
-import { GoogleAdSenseProvider } from './googleAdSenseProvider';
-import { AdsterraProvider } from './adsterraProvider';
-import { DirectAdvertiserProvider } from './directAdvertiserProvider';
+import { prisma } from '@/lib/prisma';
+import { AdPlacementRequest, AdPlacementResponse } from './adProviderInterface';
 
 export class AdProviderManager {
-  private static providers: Map<string, AdProviderInterface> = new Map([
-    ['google_adsense', new GoogleAdSenseProvider()],
-    ['adsterra', new AdsterraProvider()],
-    ['direct', new DirectAdvertiserProvider()],
-  ]);
+  static async getPlacementWithFallback(request: AdPlacementRequest): Promise<AdPlacementResponse | null> {
+    const { slotName } = request;
 
-  static async getPlacementWithFallback(request: AdPlacementRequest): Promise<AdPlacementResponse> {
-    const chain = ['google_adsense', 'adsterra', 'direct'];
+    try {
+      // 1. Fetch active providers ordered by priority (1 = highest priority)
+      const activeProviders = await prisma.adProvider.findMany({
+        where: { status: 'active' },
+        orderBy: { priority: 'asc' },
+      });
 
-    for (const key of chain) {
-      const provider = this.providers.get(key);
-      if (provider) {
+      for (const provider of activeProviders) {
+        let placements: string[] = [];
         try {
-          const health = await provider.healthCheck();
-          if (health !== 'offline') {
-            const placement = await provider.getPlacement(request);
-            if (placement) {
-              return placement;
-            }
+          placements = JSON.parse(provider.placementsJson || '[]');
+        } catch (e) {
+          placements = ['all', 'feed'];
+        }
+
+        // Check if provider supports the requested slotName or "all"
+        const isSupported = placements.includes(slotName) || placements.includes('all') || placements.includes('feed');
+        if (isSupported) {
+          if (provider.adCodeSnippet && provider.adCodeSnippet.trim()) {
+            return {
+              providerKey: provider.providerKey,
+              providerName: provider.name,
+              slotName,
+              format: 'code_snippet',
+              adContentHtml: provider.adCodeSnippet,
+              isFallback: false,
+            };
           }
-        } catch (err) {
-          console.error(`AdProvider ${key} failed, attempting fallback...`, err);
         }
       }
+    } catch (err) {
+      console.error('AdProviderManager DB lookup error:', err);
     }
 
-    // Default Fallback response (Guarantees system never crashes)
+    // 2. Return fallback Native Promotion response if no active code provider matches
     return {
-      providerKey: 'fallback',
+      providerKey: 'house',
       providerName: 'EarnSpace Native Promotion',
-      slotName: request.slotName,
+      slotName,
       format: 'native',
-      title: 'Become an EarnSpace Verified Creator',
+      title: 'Monetize Your Content on EarnSpace',
+      description: 'Join the EarnSpace Creator Partner Program and earn revenue share from your posts, videos, and reels.',
       destinationUrl: '/creator/monetization',
-      ctaText: 'Learn More',
+      ctaText: 'Apply Now',
       isFallback: true,
     };
   }
 }
-

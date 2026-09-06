@@ -18,7 +18,6 @@ export async function GET(req: NextRequest) {
       orderBy: { priority: 'asc' },
     });
 
-    // Hide sensitive API credentials from list response
     const safeProviders = providers.map((p) => ({
       ...p,
       credentialsJson: '[PROTECTED]',
@@ -41,7 +40,7 @@ export async function POST(req: NextRequest) {
       return errorResponse('Permission denied', 403);
     }
 
-    const { name, providerKey, priority, placementsJson, credentialsJson } = await req.json();
+    const { name, providerKey, priority, placementsJson, credentialsJson, adCodeSnippet, status } = await req.json();
     if (!name || !providerKey) {
       return errorResponse('Provider name and key are required', 400);
     }
@@ -50,17 +49,17 @@ export async function POST(req: NextRequest) {
       data: {
         name,
         providerKey,
-        priority: priority || 1,
-        placementsJson: typeof placementsJson === 'string' ? placementsJson : JSON.stringify(placementsJson || []),
+        priority: priority ? parseInt(priority) : 1,
+        placementsJson: typeof placementsJson === 'string' ? placementsJson : JSON.stringify(placementsJson || ['SOCIAL_FEED_MID', 'SIDEBAR_BANNER']),
         credentialsJson: typeof credentialsJson === 'string' ? credentialsJson : JSON.stringify(credentialsJson || {}),
-        status: 'active',
+        adCodeSnippet: adCodeSnippet || null,
+        status: status || 'active',
       },
     });
 
     return successResponse(provider, 'Ad provider created successfully', 201);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Admin create ad provider error:', error);
-    return errorResponse('Internal server error', 500);
+    return errorResponse(error.message || 'Internal server error', 500);
   }
 }
-
