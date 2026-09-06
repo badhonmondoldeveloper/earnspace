@@ -53,7 +53,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { userId, action, status, isFrozen, reason } = body;
+    const { userId, action, status, isFrozen, isVerified, reason } = body;
 
     if (!userId || !reason) {
       return errorResponse('User ID and audit reason required', 400);
@@ -83,9 +83,31 @@ export async function PATCH(req: NextRequest) {
       return successResponse(updatedWallet, `User wallet ${isFrozen ? 'frozen' : 'unfrozen'}`);
     }
 
+    if (action === 'toggle_verification') {
+      const targetUser = await prisma.user.findUnique({ where: { id: userId } });
+      const newAccountType = targetUser?.accountType === 'CREATOR' ? 'PERSONAL' : 'CREATOR';
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: { accountType: newAccountType },
+      });
+
+      // Audit log
+      await prisma.auditLog.create({
+        data: {
+          adminUserId: adminSession.adminId,
+          action: 'TOGGLE_USER_VERIFICATION',
+          targetType: 'USER',
+          targetId: userId,
+          reason,
+          afterJson: JSON.stringify({ accountType: newAccountType }),
+        },
+      });
+
+      return successResponse(updatedUser, `Creator verification accountType set to ${newAccountType}`);
+    }
+
     return errorResponse('Invalid action', 400);
   } catch (error: any) {
     return errorResponse(error.message || 'Internal server error', 500);
   }
 }
-
