@@ -17,6 +17,7 @@ export async function GET(req: NextRequest, { params }: { params: { username: st
       include: {
         profile: { select: { fullName: true, bio: true, avatar: true, cover: true, location: true, website: true, category: true, socialLinks: true, followersCount: true, followingCount: true, postsCount: true, blogsCount: true, videosCount: true, reelsCount: true } },
         settings: { select: { profileVisibility: true } },
+        referral: { select: { referralCode: true } },
       },
     });
 
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest, { params }: { params: { username: st
       return errorResponse('This profile is private', 403);
     }
 
-    const [posts, blogs] = await Promise.all([
+    const [posts, blogs, stories] = await Promise.all([
       prisma.post.findMany({
         where: isOwnProfile ? { userId: user.id } : { userId: user.id, status: 'published', visibility: 'public' },
         take: 10,
@@ -38,9 +39,14 @@ export async function GET(req: NextRequest, { params }: { params: { username: st
       }),
       prisma.blog.findMany({
         where: { userId: user.id, status: 'published' },
-        take: 5,
+        take: 10,
         orderBy: { publishedAt: 'desc' },
-        select: { id: true, title: true, slug: true, excerpt: true, publishedAt: true, coverImage: true },
+        select: { id: true, title: true, slug: true, excerpt: true, content: true, publishedAt: true, coverImage: true, category: true, tags: true },
+      }),
+      prisma.story.findMany({
+        where: { userId: user.id, expiresAt: { gt: new Date() } },
+        take: 5,
+        orderBy: { createdAt: 'desc' },
       }),
     ]);
 
@@ -63,8 +69,10 @@ export async function GET(req: NextRequest, { params }: { params: { username: st
       accountType: user.accountType,
       isEmailVerified: user.isEmailVerified,
       profile: user.profile,
+      referralCode: user.referral?.referralCode || user.username,
       posts,
       blogs,
+      stories,
       isFollowing,
       isOwnProfile,
     });
@@ -75,4 +83,3 @@ export async function GET(req: NextRequest, { params }: { params: { username: st
     return errorResponse('Something went wrong. Please try again.', 500);
   }
 }
-

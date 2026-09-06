@@ -111,3 +111,4 @@ export default function MediaPreview({ mediaUrls, onRemove, isVideo = false }: M
     </div>
   );
 }
+

@@ -59,3 +59,4 @@ export async function uploadMedia(
     xhr.send(formData);
   });
 }
+

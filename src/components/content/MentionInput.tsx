@@ -86,3 +86,4 @@ export default function MentionInput({ onSelectMention }: MentionInputProps) {
     </div>
   );
 }
+

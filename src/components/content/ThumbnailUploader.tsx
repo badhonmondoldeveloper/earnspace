@@ -69,3 +69,4 @@ export default function ThumbnailUploader({ value, onChange, onSelectFile }: Thu
     </div>
   );
 }
+

@@ -75,3 +75,4 @@ export default function FeelingActivityPicker({ value, onChange }: FeelingActivi
     </div>
   );
 }
+

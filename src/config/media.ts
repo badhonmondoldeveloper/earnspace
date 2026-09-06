@@ -90,3 +90,4 @@ export const FEELING_ACTIVITIES = [
   { emoji: '✈️', label: 'Traveling', category: 'activity' },
   { emoji: '🍿', label: 'Watching', category: 'activity' },
 ];
+

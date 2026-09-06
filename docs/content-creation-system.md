@@ -48,3 +48,4 @@ EarnSpace Content Creation System V2 provides a production-grade, Facebook-inspi
 1. **Authentication**: All creation APIs strictly check `getSession()` on the server side. Client-provided `userId` is never trusted.
 2. **Server-Side Filtering**: Private posts (`only_me` and `followers`) are restricted at the database query level (`whereClause`).
 3. **Hashtag & Mention Extraction**: Sanitizes inputs and dispatches real-time user mention notifications without exposing private data.
+
