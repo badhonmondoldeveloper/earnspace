@@ -1,10 +1,18 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import './globals.css';
 import { GlobalHeadAdInjector } from '@/components/ads/GlobalHeadAdInjector';
 import { AdBlockDetector } from '@/components/ads/AdBlockDetector';
 import { PwaInstallPrompt } from '@/components/layout/PwaInstallPrompt';
 import { LanguageProvider } from '@/context/LanguageContext';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#0f172a',
+};
 
 export const metadata: Metadata = {
   title: 'EarnSpace — Create • Connect • Grow • Earn',
@@ -35,7 +43,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className="antialiased min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+      <body className="antialiased min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-16 lg:pb-0 overflow-x-hidden">
         <Script
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9249570729862532"
           strategy="beforeInteractive"

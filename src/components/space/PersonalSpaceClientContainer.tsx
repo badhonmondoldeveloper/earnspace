@@ -66,27 +66,27 @@ export function PersonalSpaceClientContainer({
   return (
     <div className={`min-h-screen ${theme.bg} ${theme.text} selection:bg-indigo-500 selection:text-white flex flex-col`}>
       {/* Top Fixed Floating Branding Bar */}
-      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+      <div className="fixed top-3 right-3 sm:top-4 sm:right-4 z-50 flex items-center gap-1.5 sm:gap-2">
         <button
           onClick={() => setShowTipModal(true)}
-          className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-pink-600 to-rose-600 hover:opacity-90 text-xs font-bold text-white shadow-lg transition flex items-center gap-1.5"
+          className="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-gradient-to-r from-pink-600 to-rose-600 hover:opacity-90 text-[11px] sm:text-xs font-bold text-white shadow-lg transition flex items-center gap-1"
         >
-          <span>💖 Tip Creator</span>
+          <span>💖 Tip</span>
         </button>
 
         <Link
           href="/"
-          className="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-xs font-semibold border border-white/15 text-white transition flex items-center gap-1.5"
+          className="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-[11px] sm:text-xs font-semibold border border-white/15 text-white transition flex items-center gap-1"
         >
           <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-          <span>Powered by EarnSpace</span>
+          <span className="hidden xs:inline sm:inline">EarnSpace</span>
         </Link>
       </div>
 
-      <div className="max-w-4xl w-full mx-auto px-4 py-10 space-y-8 flex-1">
+      <div className="max-w-4xl w-full mx-auto px-3 sm:px-4 py-6 sm:py-10 space-y-6 sm:space-y-8 flex-1">
         {/* Header Hero Section */}
-        <div className={`p-6 sm:p-8 rounded-3xl border ${theme.card} text-center space-y-5 shadow-2xl relative overflow-hidden`}>
-          <div className="w-28 h-28 mx-auto rounded-full bg-indigo-600 text-white font-extrabold text-4xl flex items-center justify-center border-4 border-indigo-500 shadow-2xl overflow-hidden">
+        <div className={`p-4 sm:p-8 rounded-3xl border ${theme.card} text-center space-y-4 sm:space-y-5 shadow-2xl relative overflow-hidden`}>
+          <div className="w-20 h-20 sm:w-28 sm:h-28 mx-auto rounded-full bg-indigo-600 text-white font-extrabold text-2xl sm:text-4xl flex items-center justify-center border-4 border-indigo-500 shadow-2xl overflow-hidden">
             {authorAvatar ? (
               <img src={authorAvatar} alt={authorName} className="w-full h-full object-cover" />
             ) : (
@@ -94,29 +94,29 @@ export function PersonalSpaceClientContainer({
             )}
           </div>
 
-          <div className="space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center justify-center gap-2">
+          <div className="space-y-1.5 sm:space-y-2">
+            <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight flex items-center justify-center gap-2">
               {authorName}
-              {profile?.isVerified && <Sparkles className="w-5 h-5 text-amber-400 fill-amber-400" />}
+              {profile?.isVerified && <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 fill-amber-400" />}
             </h1>
             <p className="text-xs font-mono text-indigo-400">@{user.username}</p>
             {profile?.bio && <p className={`text-xs ${theme.subtext} max-w-md mx-auto leading-relaxed`}>{profile.bio}</p>}
           </div>
 
           {/* Social Stats Counter */}
-          <div className="flex items-center justify-center gap-6 text-xs border-t border-slate-800/80 pt-4">
+          <div className="flex items-center justify-center gap-4 sm:gap-6 text-xs border-t border-slate-800/80 pt-4">
             <div>
-              <span className="font-bold text-white block text-sm">{profile?.followersCount || 0}</span>
+              <span className="font-bold text-white block text-xs sm:text-sm">{profile?.followersCount || 0}</span>
               <span className={theme.subtext}>Followers</span>
             </div>
             <div className="w-px h-6 bg-slate-800" />
             <div>
-              <span className="font-bold text-white block text-sm">{posts.length}</span>
+              <span className="font-bold text-white block text-xs sm:text-sm">{posts.length}</span>
               <span className={theme.subtext}>Posts</span>
             </div>
             <div className="w-px h-6 bg-slate-800" />
             <div>
-              <span className="font-bold text-white block text-sm">{reels.length}</span>
+              <span className="font-bold text-white block text-xs sm:text-sm">{reels.length}</span>
               <span className={theme.subtext}>Reels</span>
             </div>
           </div>
@@ -126,7 +126,7 @@ export function PersonalSpaceClientContainer({
             <div className="flex items-center justify-center gap-3">
               <button
                 onClick={() => setShowTipModal(true)}
-                className={`px-6 py-2.5 rounded-full ${theme.accent} font-bold text-xs shadow-lg transition flex items-center gap-2`}
+                className={`w-full sm:w-auto px-6 py-2.5 rounded-full ${theme.accent} font-bold text-xs shadow-lg transition flex items-center justify-center gap-2`}
               >
                 <span>Support Creator via bKash / Nagad</span>
                 <span>💖</span>
@@ -134,8 +134,8 @@ export function PersonalSpaceClientContainer({
             </div>
 
             {/* Marketing Share Buttons */}
-            <div className="flex items-center justify-center gap-2 pt-2 border-t border-slate-800/60">
-              <span className="text-[11px] text-slate-400 font-medium mr-1">Share Space:</span>
+            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 pt-2 border-t border-slate-800/60">
+              <span className="text-[11px] text-slate-400 font-medium mr-1 w-full sm:w-auto text-center sm:text-left">Share Space:</span>
               <a
                 href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : `https://earnspace-chi.vercel.app/space/${user.username}`)}`}
                 target="_blank"
@@ -169,7 +169,7 @@ export function PersonalSpaceClientContainer({
         <SmartAdSlot slotName="PERSONAL_SPACE_HEADER" creatorId={user.id} />
 
         {/* Dynamic Navigation Tabs */}
-        <div className="flex items-center justify-center gap-1 sm:gap-2 overflow-x-auto pb-2 border-b border-slate-800">
+        <div className="flex items-center justify-start sm:justify-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 border-b border-slate-800 no-scrollbar">
           {[
             { id: 'overview', label: 'Overview' },
             { id: 'posts', label: `Posts (${posts.length})` },
@@ -181,7 +181,7 @@ export function PersonalSpaceClientContainer({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+              className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap shrink-0 ${
                 activeTab === tab.id
                   ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
