@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { CreditCard, Plus, ArrowRight, ShieldCheck, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { CreditCard, Plus, ArrowRight, CheckCircle2, AlertCircle, Smartphone, Landmark, ShieldCheck } from 'lucide-react';
 
 export default function WithdrawalsPage() {
   const [data, setData] = useState<any>(null);
@@ -82,11 +82,11 @@ export default function WithdrawalsPage() {
       });
       const resData = await res.json();
       if (resData.success) {
-        setMsg('Withdrawal requested successfully! Reserved funds are under review.');
+        setMsg('Withdrawal requested successfully! Request is now pending admin payout review.');
         setAmount('');
         fetchData();
       } else {
-        setError(resData.message || 'Withdrawal failed');
+        setError(resData.message || 'Withdrawal request failed');
       }
     } catch (e) {
     } finally {
@@ -98,28 +98,28 @@ export default function WithdrawalsPage() {
   const requests = data?.requests || [];
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+    <div className="min-h-screen flex flex-col bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       <Navbar />
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-8 space-y-8">
         <div className="pb-4 border-b border-slate-200 dark:border-slate-800">
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <CreditCard className="w-6 h-6 text-brand-500" />
-            <span>Withdrawals & Settlement Hub</span>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-slate-900 dark:text-white">
+            <CreditCard className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+            <span>Bangladeshi Creator Payout Portal</span>
           </h1>
-          <p className="text-xs text-slate-500">Configure payout destinations (bKash, Nagad, Bank) and request withdrawals</p>
+          <p className="text-xs text-slate-500">Withdraw your content earnings directly to bKash, Nagad, Rocket, or Bank Transfer</p>
         </div>
 
         {msg && (
           <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4" />
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
             <span>{msg}</span>
           </div>
         )}
 
         {error && (
           <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4" />
+            <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
@@ -127,17 +127,17 @@ export default function WithdrawalsPage() {
         <div className="grid md:grid-cols-2 gap-8">
           {/* Request Withdrawal Form */}
           <form onSubmit={handleRequestWithdrawal} className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Request Payout</h3>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Request Payout (৳10,000 Threshold)</h3>
 
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Select Payout Destination</label>
               {methods.length === 0 ? (
-                <p className="text-xs text-slate-400">No payout method added yet. Add one below.</p>
+                <p className="text-xs text-slate-400">No payout method added yet. Add bKash, Nagad, or Bank below.</p>
               ) : (
                 <select
                   value={selectedMethodId}
                   onChange={(e) => setSelectedMethodId(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                  className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-medium"
                 >
                   {methods.map((m: any) => (
                     <option key={m.id} value={m.id}>
@@ -149,66 +149,66 @@ export default function WithdrawalsPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Withdrawal Amount ($ USD)</label>
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Withdrawal Amount (৳ BDT)</label>
               <input
                 type="number"
-                min="10"
-                max="5000"
-                step="0.01"
+                min="10000"
+                step="100"
                 required
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="Minimum $10.00"
-                className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                placeholder="Minimum ৳10,000 BDT"
+                className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-slate-900 dark:text-white"
               />
             </div>
 
             <button
               type="submit"
               disabled={requesting || methods.length === 0 || !amount}
-              className="w-full py-2.5 text-xs font-bold rounded-xl bg-brand-500 hover:bg-brand-600 text-white transition shadow-md shadow-brand-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-2.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-md shadow-indigo-600/30 disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              <span>{requesting ? 'Processing...' : 'Submit Withdrawal Request'}</span>
+              <span>{requesting ? 'Submitting Request...' : 'Submit Payout Request'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
 
-          {/* Add Payout Method */}
+          {/* Add Payout Method Form */}
           <form onSubmit={handleAddMethod} className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Add Payout Destination</h3>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Add Bangladeshi Payout Method</h3>
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Provider</label>
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Payment Provider</label>
               <select
                 value={provider}
                 onChange={(e) => setProvider(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold"
               >
-                <option value="bkash">bKash (Mobile Wallet)</option>
-                <option value="nagad">Nagad (Mobile Wallet)</option>
-                <option value="bank">Bank Transfer</option>
+                <option value="bkash">bKash (বিকাশ Personal Account)</option>
+                <option value="nagad">Nagad (নগদ Personal Account)</option>
+                <option value="rocket">Rocket (রকেট Mobile Account)</option>
+                <option value="bank">Bank Transfer (Any Bangladeshi Bank)</option>
               </select>
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Account / Phone / IBAN</label>
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Mobile Number / Bank Account No.</label>
               <input
                 type="text"
                 required
                 value={accountIdentifier}
                 onChange={(e) => setAccountIdentifier(e.target.value)}
-                placeholder="e.g. 01700000000 or Bank AC Number"
+                placeholder="e.g. 01712345678 or AC Number"
                 className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Account Name (Optional)</label>
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Account Holder Name (bKash/Nagad/Bank Name)</label>
               <input
                 type="text"
                 value={accountName}
                 onChange={(e) => setAccountName(e.target.value)}
-                placeholder="Account Holder Name"
+                placeholder="Full Legal Name on Account"
                 className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
               />
             </div>
@@ -219,30 +219,32 @@ export default function WithdrawalsPage() {
               className="w-full py-2.5 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-900 dark:text-slate-100 transition disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
               <Plus className="w-4 h-4" />
-              <span>Save Payout Destination</span>
+              <span>Save Payout Method</span>
             </button>
           </form>
         </div>
 
         {/* Withdrawal History Table */}
         <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white">Withdrawal History</h3>
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white">Withdrawal History & TrxID Log</h3>
 
           {requests.length === 0 ? (
             <div className="p-8 text-center text-xs text-slate-400">No withdrawal requests submitted yet.</div>
           ) : (
             <div className="space-y-3">
               {requests.map((req: any) => (
-                <div key={req.id} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between text-xs">
+                <div key={req.id} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between text-xs border border-slate-200 dark:border-slate-700">
                   <div>
                     <span className="font-bold text-slate-900 dark:text-white block">
-                      ${req.amount.toFixed(2)} via {req.withdrawalMethod?.provider?.toUpperCase()} ({req.withdrawalMethod?.accountIdentifier})
+                      ৳{req.amount.toLocaleString()} BDT via {req.withdrawalMethod?.provider?.toUpperCase()} ({req.withdrawalMethod?.accountIdentifier})
                     </span>
-                    <span className="text-[10px] text-slate-400 block">{new Date(req.createdAt).toLocaleString()}</span>
+                    <span className="text-[10px] text-slate-400 block mt-0.5">
+                      {new Date(req.createdAt).toLocaleString()} {req.adminNote ? `• TrxID: ${req.adminNote}` : ''}
+                    </span>
                   </div>
                   <span
                     className={`px-3 py-1 rounded-full text-[10px] font-bold ${
-                      req.status === 'paid'
+                      req.status === 'paid' || req.status === 'processed'
                         ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400'
                         : req.status === 'rejected'
                         ? 'bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400'
@@ -262,4 +264,3 @@ export default function WithdrawalsPage() {
     </div>
   );
 }
-
