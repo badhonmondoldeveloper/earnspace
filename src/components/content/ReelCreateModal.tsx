@@ -1,158 +1,228 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Film, Upload, Music, Send } from 'lucide-react';
+import { Film, Music, Send, Sparkles, AlertCircle } from 'lucide-react';
+import { CreateModalHeader } from './CreateModalHeader';
+import MediaUploader from './MediaUploader';
+import UploadProgress from './UploadProgress';
+import HashtagInput from './HashtagInput';
+import DraftDiscardModal from './DraftDiscardModal';
+import { uploadMedia } from '@/services/mediaUploadService';
 
 interface ReelCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  user?: any;
 }
 
-export function ReelCreateModal({ isOpen, onClose, onSuccess }: ReelCreateModalProps) {
+export function ReelCreateModal({ isOpen, onClose, onSuccess, user }: ReelCreateModalProps) {
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
   const [audioTitle, setAudioTitle] = useState('Original Audio');
-  const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [hashtags, setHashtags] = useState<string[]>([]);
+  const [aspectWarning, setAspectWarning] = useState<string | null>(null);
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setVideoFile(file);
-      const url = URL.createObjectURL(file);
-      setVideoPreview(url);
+  const hasUnsavedChanges = !!videoUrl || caption.trim().length > 0;
+
+  const handleCloseAttempt = () => {
+    if (hasUnsavedChanges && !isSubmitting) {
+      setShowDiscardModal(true);
+    } else {
+      onClose();
     }
   };
 
-  const uploadFile = async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('purpose', 'reel');
-    const response = await fetch('/api/v1/uploads', { method: 'POST', body: formData });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.message || 'Reel video upload failed');
-    return result.data.url as string;
-  };
+  const handleFileSelect = async (files: File[]) => {
+    if (files.length === 0) return;
+    const file = files[0];
 
-  const handleCreateReel = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!videoFile) return;
+    // Client aspect ratio check for warning
+    const videoElem = document.createElement('video');
+    videoElem.src = URL.createObjectURL(file);
+    videoElem.onloadedmetadata = () => {
+      if (videoElem.videoWidth > videoElem.videoHeight) {
+        setAspectWarning('Landscape video detected. 9:16 vertical video recommended for Reels.');
+      } else {
+        setAspectWarning(null);
+      }
+      URL.revokeObjectURL(videoElem.src);
+    };
 
-    setLoading(true);
-    setError(null);
+    setIsUploading(true);
+    setUploadProgress(10);
+    setUploadError(null);
 
     try {
-      const uploadedVideoUrl = await uploadFile(videoFile);
+      const res = await uploadMedia(file, 'reel', (p) => setUploadProgress(p));
+      setVideoUrl(res.url);
+    } catch (err: any) {
+      setUploadError(err.message || 'Reel upload failed');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
+  const handlePublish = async () => {
+    if (!videoUrl) {
+      setSubmitError('Please select a video for your Reel');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    let finalCaption = caption.trim();
+    if (hashtags.length > 0) {
+      const tagStr = hashtags.map((t) => `#${t}`).join(' ');
+      finalCaption += finalCaption ? `\n\n${tagStr}` : tagStr;
+    }
+
+    try {
       const res = await fetch('/api/v1/reels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          caption,
-          videoUrl: uploadedVideoUrl,
-          audioTitle,
+          videoUrl,
+          caption: finalCaption,
+          audioTitle: audioTitle.trim() || 'Original Audio',
         }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to publish reel');
-
-      setCaption('');
-      setVideoFile(null);
-      setVideoPreview(null);
-      if (onSuccess) onSuccess();
-      onClose();
+      if (res.ok && data.success) {
+        setVideoUrl(null);
+        setCaption('');
+        setHashtags([]);
+        if (onSuccess) onSuccess();
+        onClose();
+      } else {
+        setSubmitError(data.error?.message || data.message || 'Failed to publish Reel');
+      }
     } catch (err: any) {
-      setError(err.message);
+      setSubmitError(err.message || 'Network error occurred');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-        {/* Header Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/60">
-          <div className="flex items-center gap-2">
-            <Film className="w-5 h-5 text-indigo-400" />
-            <h2 className="text-base font-bold text-white">Create Facebook Reel</h2>
-          </div>
-          <button onClick={onClose} className="p-1 rounded-full text-slate-400 hover:text-white">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+          <CreateModalHeader title="Create Reel" user={user} onClose={handleCloseAttempt} />
 
-        <form onSubmit={handleCreateReel} className="p-6 overflow-y-auto space-y-4 flex-1">
-          {error && (
-            <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-800 text-rose-300 text-xs">
-              {error}
-            </div>
-          )}
+          <div className="p-4 overflow-y-auto space-y-4 flex-1">
+            {videoUrl ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 9:16 Vertical Video Preview */}
+                <div className="relative aspect-[9/16] bg-black rounded-2xl overflow-hidden border border-slate-800 max-h-72 mx-auto">
+                  <video src={videoUrl} controls className="w-full h-full object-contain" />
+                  <button
+                    type="button"
+                    onClick={() => setVideoUrl(null)}
+                    className="absolute top-2 right-2 px-2.5 py-1 bg-black/70 text-white text-[10px] font-bold rounded-full hover:bg-red-600 transition-colors"
+                  >
+                    Change
+                  </button>
+                </div>
 
-          {/* Vertical Video 9:16 Preview Container */}
-          <div className="relative w-full aspect-[9/16] max-h-72 mx-auto rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-xl flex flex-col justify-center items-center">
-            {videoPreview ? (
-              <video src={videoPreview} controls className="w-full h-full object-cover" />
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-400 block mb-1">Caption</label>
+                    <textarea
+                      value={caption}
+                      onChange={(e) => setCaption(e.target.value)}
+                      placeholder="Write a caption for your Reel..."
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 resize-none h-24"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-400 block mb-1 flex items-center gap-1">
+                      <Music className="w-3.5 h-3.5 text-indigo-400" /> Audio Title
+                    </label>
+                    <input
+                      type="text"
+                      value={audioTitle}
+                      onChange={(e) => setAudioTitle(e.target.value)}
+                      placeholder="Original Audio"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+
+                  <HashtagInput tags={hashtags} onChange={setHashtags} />
+                </div>
+              </div>
             ) : (
-              <div className="text-slate-500 text-xs flex flex-col items-center gap-2 p-4 text-center">
-                <Upload className="w-8 h-8 text-indigo-400" />
-                <span>Upload a 9:16 vertical MP4 video for your Reel</span>
+              <div className="space-y-4">
+                <MediaUploader
+                  accept="video/*"
+                  purpose="reel"
+                  onFilesSelected={handleFileSelect}
+                  label="Select Reel Video"
+                  sublabel="Vertical 9:16 video up to 90 seconds (MP4, WebM)"
+                />
+
+                {isUploading && (
+                  <UploadProgress progress={uploadProgress} statusText="Uploading Reel video..." error={uploadError} />
+                )}
+              </div>
+            )}
+
+            {aspectWarning && (
+              <div className="flex items-center gap-2 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{aspectWarning}</span>
+              </div>
+            )}
+
+            {submitError && (
+              <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 p-2.5 rounded-xl">
+                {submitError}
               </div>
             )}
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-400">Select Reel Video (9:16 MP4) *</label>
-            <input
-              type="file"
-              accept="video/mp4,video/webm"
-              onChange={handleVideoChange}
-              required
-              className="w-full px-3 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white font-medium"
-            />
+          <div className="border-t border-slate-800 p-4 bg-slate-900/90 flex justify-end">
+            <button
+              type="button"
+              onClick={handlePublish}
+              disabled={isSubmitting || isUploading || !videoUrl}
+              className="w-full py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              {isSubmitting ? (
+                <>
+                  <Sparkles className="w-4 h-4 animate-spin" /> Publishing Reel...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" /> Share Reel
+                </>
+              )}
+            </button>
           </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-400 flex items-center gap-1">
-              <Music className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Audio / Song Title</span>
-            </label>
-            <input
-              type="text"
-              value={audioTitle}
-              onChange={(e) => setAudioTitle(e.target.value)}
-              placeholder="Original Audio"
-              className="w-full px-3 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white font-medium"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-400">Reel Caption & Hashtags</label>
-            <textarea
-              rows={3}
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              placeholder="Describe your Reel, add #hashtags..."
-              className="w-full p-3 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 resize-none"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading || !videoFile}
-            className="w-full py-3 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            <Send className="w-4 h-4" />
-            <span>{loading ? 'Publishing Reel...' : 'Publish Reel'}</span>
-          </button>
-        </form>
+        </div>
       </div>
-    </div>
+
+      <DraftDiscardModal
+        isOpen={showDiscardModal}
+        onConfirmDiscard={() => {
+          setShowDiscardModal(false);
+          onClose();
+        }}
+        onContinueEditing={() => setShowDiscardModal(false)}
+      />
+    </>
   );
 }

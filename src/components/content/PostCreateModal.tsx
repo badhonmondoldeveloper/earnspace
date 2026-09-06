@@ -1,7 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
-import { X, Globe, Users, Lock, Image as ImageIcon, Smile, Tag, MapPin, Send, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Image as ImageIcon, Send, Sparkles } from 'lucide-react';
+import { CreateModalHeader } from './CreateModalHeader';
+import PrivacySelector from './PrivacySelector';
+import FeelingActivityPicker from './FeelingActivityPicker';
+import HashtagInput from './HashtagInput';
+import MentionInput from './MentionInput';
+import MediaPreview from './MediaPreview';
+import UploadProgress from './UploadProgress';
+import DraftDiscardModal from './DraftDiscardModal';
+import { uploadMedia } from '@/services/mediaUploadService';
 
 interface PostCreateModalProps {
   isOpen: boolean;
@@ -10,231 +19,233 @@ interface PostCreateModalProps {
   user?: any;
 }
 
-const FEELINGS = [
-  { label: 'Happy', emoji: '😊' },
-  { label: 'Excited', emoji: '🚀' },
-  { label: 'Creative', emoji: '🎨' },
-  { label: 'Blessed', emoji: '😇' },
-  { label: 'Watching', emoji: '📺' },
-  { label: 'Listening', emoji: '🎧' },
-  { label: 'Traveling', emoji: '✈️' },
-];
-
-export function PostCreateModal({ isOpen, onClose, onSuccess, user }: PostCreateModalProps) {
+export function PostCreateModal({ isOpen, onClose, onSuccess, user: initialUser }: PostCreateModalProps) {
+  const [user, setUser] = useState<any>(initialUser || null);
   const [content, setContent] = useState('');
-  const [visibility, setVisibility] = useState<'public' | 'followers' | 'private'>('public');
-  const [selectedFeeling, setSelectedFeeling] = useState<any | null>(null);
-  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
-  const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
-  const [showFeelingPicker, setShowFeelingPicker] = useState(false);
+  const [privacy, setPrivacy] = useState('public');
+  const [feeling, setFeeling] = useState<{ emoji: string; label: string } | null>(null);
+  const [hashtags, setHashtags] = useState<string[]>([]);
+  const [mediaUrls, setMediaUrls] = useState<string[]>([]);
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      fetch('/api/v1/auth/me')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.data) setUser(data.data);
+        })
+        .catch(() => {});
+    }
+  }, [user]);
 
   if (!isOpen) return null;
 
-  const handleMediaAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length > 0) {
-      setMediaFiles((prev) => [...prev, ...files]);
-      const newPreviews = files.map((f) => URL.createObjectURL(f));
-      setMediaPreviews((prev) => [...prev, ...newPreviews]);
+  const hasUnsavedChanges = content.trim().length > 0 || mediaUrls.length > 0 || hashtags.length > 0;
+
+  const handleCloseAttempt = () => {
+    if (hasUnsavedChanges && !isSubmitting) {
+      setShowDiscardModal(true);
+    } else {
+      onClose();
     }
   };
 
-  const removeMedia = (idx: number) => {
-    setMediaFiles((prev) => prev.filter((_, i) => i !== idx));
-    setMediaPreviews((prev) => prev.filter((_, i) => i !== idx));
-  };
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const files = Array.from(e.target.files);
 
-  const uploadFile = async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('purpose', 'post-image');
-    const response = await fetch('/api/v1/uploads', { method: 'POST', body: formData });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.message || 'Media upload failed');
-    return result.data.url as string;
-  };
-
-  const handleCreatePost = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!content.trim() && mediaFiles.length === 0) return;
-
-    setLoading(true);
-    setError(null);
+    setIsUploading(true);
+    setUploadProgress(10);
+    setUploadError(null);
 
     try {
-      const uploadedUrls: string[] = [];
-      for (const file of mediaFiles) {
-        const url = await uploadFile(file);
-        uploadedUrls.push(url);
+      const uploadedList: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const res = await uploadMedia(file, 'post-image', (p) => {
+          const overall = Math.round(((i + p / 100) / files.length) * 100);
+          setUploadProgress(overall);
+        });
+        uploadedList.push(res.url);
       }
+      setMediaUrls((prev) => [...prev, ...uploadedList]);
+      setUploadProgress(100);
+    } catch (err: any) {
+      setUploadError(err.message || 'Image upload failed');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
-      let finalContent = content;
-      if (selectedFeeling) {
-        finalContent += ` — feeling ${selectedFeeling.emoji} ${selectedFeeling.label}`;
-      }
+  const handleRemoveMedia = (index: number) => {
+    setMediaUrls((prev) => prev.filter((_, i) => i !== index));
+  };
 
+  const handleMentionSelect = (username: string) => {
+    setContent((prev) => `${prev} @${username} `);
+  };
+
+  const handlePublish = async () => {
+    if (!content.trim() && mediaUrls.length === 0) {
+      setSubmitError('Please write something or attach photos');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    let finalContent = content.trim();
+    if (feeling) {
+      finalContent += ` — feeling ${feeling.emoji} ${feeling.label}`;
+    }
+    if (hashtags.length > 0) {
+      const tagStr = hashtags.map((t) => `#${t}`).join(' ');
+      finalContent += `\n\n${tagStr}`;
+    }
+
+    try {
       const res = await fetch('/api/v1/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           content: finalContent,
-          type: uploadedUrls.length > 0 ? 'image' : 'text',
-          visibility,
-          mediaUrls: uploadedUrls,
+          type: mediaUrls.length > 0 ? 'image' : 'text',
+          visibility: privacy,
+          mediaUrls,
         }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to publish post');
-
-      setContent('');
-      setMediaFiles([]);
-      setMediaPreviews([]);
-      setSelectedFeeling(null);
-      if (onSuccess) onSuccess();
-      onClose();
+      if (res.ok && data.success) {
+        setContent('');
+        setMediaUrls([]);
+        setHashtags([]);
+        setFeeling(null);
+        if (onSuccess) onSuccess();
+        onClose();
+      } else {
+        setSubmitError(data.error?.message || data.message || 'Failed to create post');
+      }
     } catch (err: any) {
-      setError(err.message);
+      setSubmitError(err.message || 'Network error occurred');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
+  const firstName = user?.profile?.fullName
+    ? user.profile.fullName.split(' ')[0]
+    : user?.username || 'there';
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-        {/* Header Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/60">
-          <h2 className="text-base font-bold text-white">Create Facebook Post</h2>
-          <button onClick={onClose} className="p-1 rounded-full text-slate-400 hover:text-white">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleCreatePost} className="p-6 overflow-y-auto space-y-4 flex-1">
-          {error && (
-            <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-800 text-rose-300 text-xs">
-              {error}
-            </div>
-          )}
-
-          {/* User Header & Privacy Selector */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center overflow-hidden shrink-0 border border-indigo-500">
-              {user?.profile?.avatar ? (
-                <img src={user.profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                user?.username?.[0]?.toUpperCase() || 'U'
-              )}
-            </div>
-            <div>
-              <p className="text-xs font-bold text-white flex items-center gap-1.5">
-                <span>{user?.profile?.fullName || user?.username || 'Creator'}</span>
-                {selectedFeeling && (
-                  <span className="text-slate-400 font-normal">is feeling {selectedFeeling.emoji} {selectedFeeling.label}</span>
-                )}
-              </p>
-
-              {/* Privacy Selector Dropdown */}
-              <div className="flex items-center gap-1 mt-1">
-                <select
-                  value={visibility}
-                  onChange={(e: any) => setVisibility(e.target.value)}
-                  className="bg-slate-800 border border-slate-700 text-slate-200 text-[10px] font-bold rounded-lg px-2 py-0.5 outline-none"
-                >
-                  <option value="public">🌍 Public</option>
-                  <option value="followers">👥 Followers</option>
-                  <option value="private">🔒 Only Me</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Rich Post Content Area */}
-          <textarea
-            rows={4}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder={`What's on your mind, ${user?.profile?.fullName || user?.username || 'Creator'}? Use #hashtags or @mentions...`}
-            required={mediaFiles.length === 0}
-            className="w-full p-3 text-xs rounded-2xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 resize-none"
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+          {/* Header */}
+          <CreateModalHeader
+            title="Create Post"
+            user={user}
+            privacy={privacy}
+            onPrivacyChange={setPrivacy}
+            onClose={handleCloseAttempt}
           />
 
-          {/* Media Previews Grid */}
-          {mediaPreviews.length > 0 && (
-            <div className="grid grid-cols-2 gap-2 rounded-2xl overflow-hidden p-2 bg-slate-950 border border-slate-800">
-              {mediaPreviews.map((preview, idx) => (
-                <div key={idx} className="relative aspect-square bg-slate-900 rounded-xl overflow-hidden group">
-                  <img src={preview} alt="" className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => removeMedia(idx)}
-                    className="absolute top-2 right-2 p-1 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Body */}
+          <div className="p-4 overflow-y-auto space-y-4 flex-1">
+            {/* Text Input */}
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder={`What's on your mind, ${firstName}?`}
+              className="w-full bg-transparent text-slate-100 placeholder-slate-500 text-sm focus:outline-none resize-none min-h-[100px]"
+            />
 
-          {/* Feeling Picker Popup */}
-          {showFeelingPicker && (
-            <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">How are you feeling?</span>
-              <div className="flex flex-wrap gap-1.5">
-                {FEELINGS.map((f) => (
-                  <button
-                    key={f.label}
-                    type="button"
-                    onClick={() => {
-                      setSelectedFeeling(f);
-                      setShowFeelingPicker(false);
-                    }}
-                    className="px-2.5 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium flex items-center gap-1 transition"
-                  >
-                    <span>{f.emoji}</span>
-                    <span>{f.label}</span>
-                  </button>
-                ))}
+            {/* Selected Feeling Badge */}
+            {feeling && (
+              <div className="pt-1">
+                <FeelingActivityPicker value={feeling} onChange={setFeeling} />
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Post Action Pills Bar */}
-          <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Add to your post</span>
-            <div className="flex items-center gap-1">
-              <label className="p-2 rounded-full hover:bg-slate-800 text-emerald-400 cursor-pointer transition" title="Add Photo/Video">
-                <ImageIcon className="w-5 h-5" />
-                <input type="file" multiple accept="image/*,video/*" onChange={handleMediaAdd} className="hidden" />
-              </label>
+            {/* Media Previews */}
+            <MediaPreview mediaUrls={mediaUrls} onRemove={handleRemoveMedia} />
+
+            {/* Upload Progress */}
+            {isUploading && (
+              <UploadProgress progress={uploadProgress} statusText="Uploading media files..." error={uploadError} />
+            )}
+
+            {/* Hashtags Input */}
+            <div className="pt-2 border-t border-slate-800/80">
+              <HashtagInput tags={hashtags} onChange={setHashtags} />
+            </div>
+
+            {/* Error Message */}
+            {submitError && (
+              <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 p-2.5 rounded-xl">
+                {submitError}
+              </div>
+            )}
+          </div>
+
+          {/* Footer Controls */}
+          <div className="border-t border-slate-800 p-4 bg-slate-900/90 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                <label className="cursor-pointer p-2 hover:bg-slate-800 text-emerald-400 rounded-xl transition-colors flex items-center gap-1.5 text-xs font-medium">
+                  <ImageIcon className="w-4 h-4" />
+                  <span className="hidden sm:inline">Photo</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    disabled={isUploading || isSubmitting}
+                  />
+                </label>
+
+                <FeelingActivityPicker value={null} onChange={setFeeling} />
+                <MentionInput onSelectMention={handleMentionSelect} />
+              </div>
 
               <button
                 type="button"
-                onClick={() => setShowFeelingPicker(!showFeelingPicker)}
-                className="p-2 rounded-full hover:bg-slate-800 text-amber-400 transition"
-                title="Add Feeling/Activity"
+                onClick={handlePublish}
+                disabled={isSubmitting || isUploading || (!content.trim() && mediaUrls.length === 0)}
+                className="px-5 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold text-xs rounded-xl shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
               >
-                <Smile className="w-5 h-5" />
+                {isSubmitting ? (
+                  <>
+                    <Sparkles className="w-3.5 h-3.5 animate-spin" /> Publishing...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5" /> Publish
+                  </>
+                )}
               </button>
             </div>
           </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading || (!content.trim() && mediaFiles.length === 0)}
-            className="w-full py-3 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            <Send className="w-4 h-4" />
-            <span>{loading ? 'Publishing Post...' : 'Post to Timeline'}</span>
-          </button>
-        </form>
+        </div>
       </div>
-    </div>
+
+      <DraftDiscardModal
+        isOpen={showDiscardModal}
+        onConfirmDiscard={() => {
+          setShowDiscardModal(false);
+          onClose();
+        }}
+        onContinueEditing={() => setShowDiscardModal(false)}
+      />
+    </>
   );
 }
