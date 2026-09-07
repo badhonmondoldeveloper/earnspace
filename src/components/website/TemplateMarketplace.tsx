@@ -54,6 +54,32 @@ export function TemplateMarketplace({ onSelectTemplate, onPreviewTemplate }: Tem
 
   return (
     <div className="space-y-6 text-slate-100 font-sans">
+      {/* Ready-Made Income Engine Banner */}
+      <div className="bg-gradient-to-r from-emerald-950/80 via-slate-900 to-indigo-950/80 border border-emerald-500/30 rounded-3xl p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500 text-slate-950 uppercase tracking-wider">
+              💰 Ready-Made Income Engine
+            </span>
+            <span className="text-xs text-emerald-400 font-semibold">100% Monetization Ready</span>
+          </div>
+          <h2 className="text-lg font-black text-white">Turn Every Template Into a Ready-Made Earning Website</h2>
+          <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+            Choose any template below — each comes fully pre-configured with monetized ad slots, digital store checkout (bKash & Nagad), and fan tipping. Start earning revenue share immediately upon launching your space.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="px-3 py-2 bg-slate-900/80 border border-slate-700/60 rounded-2xl text-center">
+            <div className="text-xs font-mono text-emerald-400 font-bold">50-70%</div>
+            <div className="text-[10px] text-slate-400">Ad RevShare</div>
+          </div>
+          <div className="px-3 py-2 bg-slate-900/80 border border-slate-700/60 rounded-2xl text-center">
+            <div className="text-xs font-mono text-indigo-400 font-bold">bKash/Nagad</div>
+            <div className="text-[10px] text-slate-400">Direct Payouts</div>
+          </div>
+        </div>
+      </div>
+
       {/* Top Search & Filter Bar */}
       <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-lg space-y-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -125,9 +151,14 @@ export function TemplateMarketplace({ onSelectTemplate, onPreviewTemplate }: Tem
               <div className="absolute inset-0 bg-indigo-600/10 group-hover:bg-indigo-600/20 transition-colors"></div>
 
               <div className="flex items-start justify-between z-10">
-                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-900/80 text-cyan-300 border border-cyan-500/30 backdrop-blur-md">
-                  {tpl.category}
-                </span>
+                <div className="flex flex-wrap items-center gap-1">
+                  <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-900/80 text-cyan-300 border border-cyan-500/30 backdrop-blur-md">
+                    {tpl.category}
+                  </span>
+                  <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 backdrop-blur-md flex items-center gap-0.5">
+                    💰 Ready Income Site
+                  </span>
+                </div>
                 <button
                   onClick={() => toggleFav(tpl.id)}
                   className={`w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md transition-colors ${

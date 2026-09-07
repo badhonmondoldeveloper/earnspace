@@ -45,9 +45,9 @@ export default function CreatorEarningsPage() {
           </div>
           <Link
             href="/wallet"
-            className="px-5 py-2.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-lg shadow-indigo-600/30"
+            className="px-5 py-2.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition shadow-lg shadow-emerald-600/30 flex items-center gap-2"
           >
-            💳 Go to Wallet
+            <span>⚡ Request bKash/Nagad Payout</span>
           </Link>
         </div>
 

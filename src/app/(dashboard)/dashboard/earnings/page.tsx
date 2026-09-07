@@ -23,12 +23,20 @@ export default function EarningsDashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div className="pb-4 border-b border-slate-200 dark:border-slate-800">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-          <DollarSign className="w-6 h-6 text-emerald-500" />
-          <span>Creator Earnings & Revenue</span>
-        </h1>
-        <p className="text-xs text-slate-500">Transparent creator revenue splits, pending verification, and settled earnings</p>
+      <div className="pb-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            <DollarSign className="w-6 h-6 text-emerald-500" />
+            <span>Creator Earnings & Revenue</span>
+          </h1>
+          <p className="text-xs text-slate-500">Transparent creator revenue splits, pending verification, and settled earnings</p>
+        </div>
+        <a
+          href="/wallet"
+          className="px-5 py-2.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition shadow-lg shadow-emerald-600/30 flex items-center gap-2 w-fit"
+        >
+          <span>⚡ Request bKash/Nagad Payout</span>
+        </a>
       </div>
 
       {/* Metrics Cards */}
