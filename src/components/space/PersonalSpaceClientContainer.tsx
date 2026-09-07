@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { FacebookProfileSpace } from '@/components/space/FacebookProfileSpace';
+import { StandalonePersonalWebsite } from '@/components/space/StandalonePersonalWebsite';
 
 interface PersonalSpaceClientContainerProps {
   page: any;
@@ -20,21 +20,18 @@ export function PersonalSpaceClientContainer({
   page,
   user,
   profile,
-  posts,
-  reels,
-  videos,
   blogs,
   blocks,
+  settings,
 }: PersonalSpaceClientContainerProps) {
   return (
-    <FacebookProfileSpace
+    <StandalonePersonalWebsite
+      page={page}
       user={user}
       profile={profile}
-      posts={posts}
-      reels={reels}
-      videos={videos}
       blogs={blogs}
       blocks={blocks}
+      settings={settings}
       isOwner={false}
     />
   );
