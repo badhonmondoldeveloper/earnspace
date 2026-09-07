@@ -1,89 +1,141 @@
 import { prisma } from '@/lib/prisma';
 
 export interface CreatePaymentAccountInput {
-  userId: string;
-  provider: 'BKASH' | 'NAGAD' | 'ROCKET' | 'UPAY' | 'BANK' | 'CRYPTO';
-  accountType?: 'PERSONAL' | 'MERCHANT' | 'AGENT';
+  userId?: string;
+  provider: string; // BKASH, NAGAD, ROCKET, UPAY, BANK, CRYPTO
+  accountType?: string; // PERSONAL, MERCHANT, AGENT
   phoneNumber: string;
   displayName?: string;
+  instructions?: string;
+  verificationStatus?: string;
+  status?: string;
+  isDefault?: boolean;
+}
+
+export interface UpdatePaymentAccountInput {
+  provider?: string;
+  accountType?: string;
+  phoneNumber?: string;
+  displayName?: string;
+  instructions?: string;
+  verificationStatus?: string;
+  status?: string;
+  isDefault?: boolean;
 }
 
 export class PaymentAccountService {
   /**
-   * Masks sensitive account phone number e.g. 01712345678 -> 017****5678
+   * List all payment accounts for admin desk
    */
-  static maskPhoneNumber(phone: string): string {
-    if (!phone || phone.length < 8) return phone;
-    const prefix = phone.substring(0, 3);
-    const suffix = phone.substring(phone.length - 4);
-    return `${prefix}****${suffix}`;
+  static async listAllAccounts() {
+    return prisma.paymentAccount.findMany({
+      orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
+      include: {
+        user: { select: { id: true, username: true, email: true } },
+      },
+    });
   }
 
   /**
-   * Registers a new external payment account for a user
-   */
-  static async addAccount(input: CreatePaymentAccountInput) {
-    const { userId, provider, accountType = 'PERSONAL', phoneNumber, displayName } = input;
-
-    if (!phoneNumber || phoneNumber.trim().length < 6) {
-      throw new Error('Valid phone number or account identifier is required');
-    }
-
-    try {
-      const account = await prisma.paymentAccount.create({
-        data: {
-          userId,
-          provider: provider.toUpperCase(),
-          accountType: accountType.toUpperCase(),
-          phoneNumber: phoneNumber.trim(),
-          displayName: displayName || `${provider.toUpperCase()} (${this.maskPhoneNumber(phoneNumber.trim())})`,
-          verificationStatus: 'PENDING',
-          status: 'active',
-        },
-      });
-
-      return {
-        ...account,
-        maskedPhone: this.maskPhoneNumber(account.phoneNumber),
-      };
-    } catch (err: any) {
-      if (err?.code === 'P2021' || err?.message?.includes('does not exist')) {
-        throw new Error('Database table for Payment Accounts is currently being provisioned. Please try again in a few moments.');
-      }
-      throw err;
-    }
-  }
-
-  /**
-   * Retrieves a user's registered payment accounts with sensitive information masked
+   * List user's payment accounts
    */
   static async getUserAccounts(userId: string) {
-    try {
-      const accounts = await prisma.paymentAccount.findMany({
-        where: { userId, status: 'active' },
-        orderBy: { createdAt: 'desc' },
-      });
-
-      return accounts.map((acc) => ({
-        ...acc,
-        maskedPhone: this.maskPhoneNumber(acc.phoneNumber),
-      }));
-    } catch (err: any) {
-      console.warn('getUserAccounts fallback (table missing or offline):', err?.message);
-      return [];
-    }
+    return prisma.paymentAccount.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   /**
-   * Updates verification status (Admin only)
+   * Get active payment numbers for public checkout forms & manual payment submissions
    */
-  static async updateVerificationStatus(
-    accountId: string,
-    verificationStatus: 'PENDING' | 'VERIFIED' | 'SUSPENDED' | 'DISABLED'
-  ) {
+  static async getActiveAccounts() {
+    return prisma.paymentAccount.findMany({
+      where: {
+        status: 'active',
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  /**
+   * Create new payment collection number/account (alias for addAccount)
+   */
+  static async addAccount(input: CreatePaymentAccountInput) {
+    return this.createAccount(input);
+  }
+
+  /**
+   * Create new payment collection number/account
+   */
+  static async createAccount(input: CreatePaymentAccountInput) {
+    const {
+      userId,
+      provider,
+      accountType = 'PERSONAL',
+      phoneNumber,
+      displayName,
+      instructions,
+      verificationStatus = 'VERIFIED',
+      status = 'active',
+    } = input;
+
+    // Get admin user ID if not provided
+    let targetUserId = userId;
+    if (!targetUserId) {
+      const adminUser = await prisma.user.findFirst();
+      targetUserId = adminUser ? adminUser.id : 'system-admin';
+    }
+
+    return prisma.paymentAccount.create({
+      data: {
+        userId: targetUserId,
+        provider: provider.toUpperCase(),
+        accountType,
+        phoneNumber,
+        displayName: displayName || `Official ${provider} Account`,
+        verificationStatus,
+        status,
+      },
+    });
+  }
+
+  /**
+   * Update payment account details
+   */
+  static async updateAccount(id: string, input: UpdatePaymentAccountInput) {
     return prisma.paymentAccount.update({
-      where: { id: accountId },
-      data: { verificationStatus },
+      where: { id },
+      data: {
+        ...(input.provider ? { provider: input.provider.toUpperCase() } : {}),
+        ...(input.accountType ? { accountType: input.accountType } : {}),
+        ...(input.phoneNumber ? { phoneNumber: input.phoneNumber } : {}),
+        ...(input.displayName !== undefined ? { displayName: input.displayName } : {}),
+        ...(input.verificationStatus ? { verificationStatus: input.verificationStatus } : {}),
+        ...(input.status ? { status: input.status } : {}),
+      },
+    });
+  }
+
+  /**
+   * Toggle account On/Off status (active <-> inactive)
+   */
+  static async toggleAccountStatus(id: string) {
+    const account = await prisma.paymentAccount.findUnique({ where: { id } });
+    if (!account) throw new Error('Payment Account not found');
+    const newStatus = account.status === 'active' ? 'inactive' : 'active';
+    return prisma.paymentAccount.update({
+      where: { id },
+      data: { status: newStatus },
+    });
+  }
+
+  /**
+   * Delete payment account number
+   */
+  static async deleteAccount(id: string) {
+    return prisma.paymentAccount.delete({
+      where: { id },
     });
   }
 }

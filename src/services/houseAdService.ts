@@ -87,5 +87,41 @@ export class HouseAdService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  static async updateHouseAd(
+    id: string,
+    data: {
+      title?: string;
+      description?: string;
+      mediaUrl?: string;
+      destinationUrl?: string;
+      ctaText?: string;
+      placement?: string;
+      priority?: number;
+      status?: string;
+    }
+  ) {
+    return prisma.houseAd.update({
+      where: { id },
+      data,
+    });
+  }
+
+  static async toggleHouseAdStatus(id: string) {
+    const existing = await prisma.houseAd.findUnique({ where: { id } });
+    if (!existing) throw new Error('House Ad not found');
+    const newStatus = existing.status === 'active' ? 'paused' : 'active';
+    return prisma.houseAd.update({
+      where: { id },
+      data: { status: newStatus },
+    });
+  }
+
+  static async deleteHouseAd(id: string) {
+    return prisma.houseAd.delete({
+      where: { id },
+    });
+  }
 }
+
 

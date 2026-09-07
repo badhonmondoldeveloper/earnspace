@@ -32,6 +32,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const navItems = [
     { label: 'Dashboard Overview', href: '/admin', icon: LayoutDashboard },
+    { label: 'Payment Gateway Numbers 🏦', href: '/admin/payment-accounts', icon: CreditCard },
     { label: 'Multi-User Wallet Finance 💳', href: '/admin/finance', icon: CreditCard },
     { label: 'bKash / Nagad Withdrawals', href: '/admin/withdrawals', icon: DollarSign },
     { label: 'User Management & Badges', href: '/admin/users', icon: Users },
