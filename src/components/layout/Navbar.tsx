@@ -282,7 +282,7 @@ export function Navbar({ initialUser }: { initialUser?: any }) {
                         className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
                       >
                         <Home className="w-4 h-4 text-indigo-500" />
-                        <span>News Feed</span>
+                        <span>Dashboard Studio</span>
                       </Link>
 
                       <Link
