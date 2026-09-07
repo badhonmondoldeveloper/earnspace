@@ -21,12 +21,17 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+import { ManualPaymentModal } from '@/components/payment/ManualPaymentModal';
+
 export default function WalletPage() {
   const [overview, setOverview] = useState<any>(null);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [devices, setDevices] = useState<any[]>([]);
   const [intents, setIntents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Manual Deposit Modal State
+  const [showManualDepositModal, setShowManualDepositModal] = useState(false);
 
   // Transfer Modal State
   const [showTransferModal, setShowTransferModal] = useState(false);
@@ -190,6 +195,13 @@ export default function WalletPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setShowManualDepositModal(true)}
+              className="px-4 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-pink-600 via-indigo-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 text-white transition flex items-center gap-1.5 shadow-lg shadow-indigo-600/30"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Money (bKash / MFS)</span>
+            </button>
             <button
               onClick={() => setShowTransferModal(true)}
               className="px-4 py-2 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition flex items-center gap-1.5 shadow-md shadow-indigo-600/30"
@@ -572,6 +584,12 @@ export default function WalletPage() {
             </div>
           </div>
         )}
+        {/* MANUAL PAYMENT DEPOSIT MODAL */}
+        <ManualPaymentModal
+          isOpen={showManualDepositModal}
+          onClose={() => setShowManualDepositModal(false)}
+          onSuccess={() => fetchWalletData()}
+        />
       </main>
 
       <Footer />

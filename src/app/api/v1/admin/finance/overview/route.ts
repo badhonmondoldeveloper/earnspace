@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
 
     try {
       reviewQueue = await prisma.paymentTransaction.findMany({
-        where: { status: 'REVIEW' },
+        where: { status: { in: ['REVIEW', 'PENDING', 'VERIFYING'] } },
         include: {
           user: { select: { username: true, email: true } },
         },

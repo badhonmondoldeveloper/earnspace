@@ -74,7 +74,7 @@ export class FinancialLedgerService {
       // Handle ledger math
       if (isPendingCredit) {
         pendingAfter += amount;
-      } else if (type === 'earning' || type === 'referral' || type === 'bonus' || type === 'refund' || type === 'fan_support') {
+      } else if (type === 'earning' || type === 'referral' || type === 'bonus' || type === 'refund' || type === 'fan_support' || type === 'deposit' || type === 'product_sale') {
         balanceAfter += amount;
         lifetimeEarnedAfter += amount;
       } else if (type === 'withdrawal' || type === 'fee') {
