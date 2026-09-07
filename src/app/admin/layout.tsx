@@ -32,10 +32,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const navItems = [
     { label: 'Dashboard Overview', href: '/admin', icon: LayoutDashboard },
+    { label: 'Multi-User Wallet Finance 💳', href: '/admin/finance', icon: CreditCard },
+    { label: 'bKash / Nagad Withdrawals', href: '/admin/withdrawals', icon: DollarSign },
     { label: 'User Management & Badges', href: '/admin/users', icon: Users },
-    { label: 'bKash / Nagad Withdrawals', href: '/admin/withdrawals', icon: CreditCard },
-    { label: 'Ads Control Center', href: '/admin/ads', icon: Megaphone },
-    { label: 'Ad Providers', href: '/admin/revenue/providers', icon: Layers },
+    { label: 'House Ads & SmartLinks 🚀', href: '/admin/ads/house-ads', icon: Megaphone },
+    { label: 'Ads Control Center', href: '/admin/ads', icon: Layers },
+    { label: 'Ad Providers', href: '/admin/revenue/providers', icon: Server },
     { label: 'Ad Placements', href: '/admin/ads/placements', icon: Layers },
     { label: 'Ad Campaigns', href: '/admin/ads/campaigns', icon: BadgeDollarSign },
     { label: 'Payout Operations', href: '/admin/payouts', icon: DollarSign },
