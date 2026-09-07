@@ -83,6 +83,14 @@ model User {
   membershipTiers          CreatorMembershipTier[]   @relation("CreatorMembershipTiers")
   affiliateLinks           AffiliateLink[]           @relation("UserAffiliateLinks")
   paymentAttempts          PaymentAttempt[]
+
+  // Multi-User Wallet Architecture Relations
+  paymentAccounts          PaymentAccount[]
+  paymentDevices           PaymentDevice[]
+  paymentIntents           PaymentIntent[]
+  paymentTransactions      PaymentTransaction[]
+  transfersSent            WalletTransfer[]          @relation("TransferSender")
+  transfersReceived        WalletTransfer[]          @relation("TransferRecipient")
 }
 
 model Profile {
@@ -1422,6 +1430,108 @@ model PaymentWebhook {
   idempotencyKey String    @unique
   createdAt      DateTime  @default(now())
 }
+
+// ==========================================
+// PRIVATE MULTI-USER WALLET AUTOMATION MODELS
+// ==========================================
+
+model PaymentAccount {
+  id                 String   @id @default(uuid())
+  userId             String
+  provider           String   // BKASH, NAGAD, ROCKET, UPAY, BANK, CRYPTO
+  accountType        String   @default("PERSONAL") // PERSONAL, MERCHANT, AGENT
+  phoneNumber        String
+  displayName        String?
+  verificationStatus String   @default("PENDING") // PENDING, VERIFIED, SUSPENDED, DISABLED
+  status             String   @default("active") // active, inactive
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  intents      PaymentIntent[]
+  transactions PaymentTransaction[]
+}
+
+model PaymentDevice {
+  id              String   @id @default(uuid())
+  userId          String
+  deviceName      String
+  devicePublicKey String
+  status          String   @default("ACTIVE") // ACTIVE, SUSPENDED, REVOKED
+  appVersion      String?  @default("1.0.0")
+  lastSeenAt      DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions PaymentTransaction[]
+}
+
+model PaymentIntent {
+  id               String   @id @default(uuid())
+  userId           String
+  amount           Float
+  currency         String   @default("BDT")
+  paymentAccountId String?
+  reference        String   @unique // e.g. ES-P8K29
+  description      String?
+  status           String   @default("PENDING") // PENDING, MATCHED, EXPIRED, CANCELLED, COMPLETED
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paymentAccount      PaymentAccount?      @relation(fields: [paymentAccountId], references: [id], onDelete: SetNull)
+  matchedTransactions PaymentTransaction[]
+}
+
+model PaymentTransaction {
+  id                     String   @id @default(uuid())
+  userId                 String
+  paymentAccountId       String?
+  deviceId               String?
+  provider               String   // BKASH, NAGAD, ROCKET, UPAY
+  transactionId          String
+  amount                 Float
+  senderNumber           String?
+  receiverNumber         String?
+  reference              String?
+  transactionType        String   @default("PAYMENT") // PAYMENT, CASH_IN, SEND_MONEY, TRANSFER
+  receivedAt             DateTime @default(now())
+  status                 String   @default("DETECTED") // DETECTED, PENDING, MATCHED, VERIFYING, VERIFIED, AVAILABLE, REVIEW, REJECTED, FAILED, REVERSED, DUPLICATE
+  matchedPaymentIntentId String?
+  riskScore              Float    @default(0.0)
+  parserVersion          String   @default("1.0")
+  rawSmsText             String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paymentAccount PaymentAccount? @relation(fields: [paymentAccountId], references: [id], onDelete: SetNull)
+  device         PaymentDevice?  @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  matchedIntent  PaymentIntent?  @relation(fields: [matchedPaymentIntentId], references: [id], onDelete: SetNull)
+
+  @@unique([provider, transactionId])
+}
+
+model WalletTransfer {
+  id             String   @id @default(uuid())
+  senderId       String
+  recipientId    String
+  amount         Float
+  currency       String   @default("BDT")
+  fee            Float    @default(0.0)
+  netAmount      Float
+  status         String   @default("COMPLETED") // COMPLETED, FAILED, REVERSED
+  idempotencyKey String   @unique
+  note           String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  sender    User @relation("TransferSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient User @relation("TransferRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+}
+
 
 
 

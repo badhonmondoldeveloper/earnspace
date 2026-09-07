@@ -14,6 +14,13 @@ const { HouseAdService } = require('../src/services/houseAdService');
 const { AdRevenueAttributionService } = require('../src/services/adRevenueAttributionService');
 const { CronJobsService } = require('../src/services/cronJobsService');
 const { AdminAuditService } = require('../src/services/adminAuditService');
+const { WalletCoreService } = require('../src/services/walletCoreService');
+const { PaymentAccountService } = require('../src/services/paymentAccountService');
+const { DeviceAuthService } = require('../src/services/deviceAuthService');
+const { PaymentIntentService } = require('../src/services/paymentIntentService');
+const { TransactionMatchingEngine } = require('../src/services/transactionMatchingEngine');
+const { PaymentRiskEngine } = require('../src/services/paymentRiskEngine');
+const { BkashAdapter } = require('../src/services/providerAdapters/BkashAdapter');
 const { prisma } = require('../src/lib/prisma');
 
 let passed = 0;
@@ -172,6 +179,39 @@ async function runAllTests() {
       reason: 'QA Audit Verification Run',
     });
     assert(auditLog.action === 'USER_FREEZE_TEST', 'Admin action recorded in append-only audit trail');
+
+    // 10. PRIVATE MULTI-USER WALLET & PAYMENT AUTOMATION ENGINE
+    console.log('\n--- Test Group 10: Multi-User Wallet & Payment Automation Engine ---');
+    const maskedPhone = PaymentAccountService.maskPhoneNumber('01712345678');
+    assert(maskedPhone === '017****5678', 'Payment account phone number masked safely (017****5678)');
+
+    const intentRef = PaymentIntentService.generateReferenceCode();
+    assert(intentRef.startsWith('ES-P') && intentRef.length === 9, 'Payment Intent reference code correctly formatted (e.g. ES-P8K29)');
+
+    const parsedSms = BkashAdapter.parseSMS('You have received Tk 500.00 from 01712345678. Ref ES-P8K29. TxnID 9B7X2K1.');
+    assert(parsedSms.parsedSuccessfully && parsedSms.transactionId === '9B7X2K1' && parsedSms.amount === 500.0, 'bKash SMS parsed successfully with transactionId and amount');
+    assert(parsedSms.reference === 'ES-P8K29', 'bKash SMS reference code extracted correctly');
+
+    const generatedSig = DeviceAuthService.generateSignature('device-1', 'secret-key', '{"amount":500}', 'nonce-123', 1700000000000);
+    assert(typeof generatedSig === 'string' && generatedSig.length === 64, 'HMAC SHA256 device request signature generated');
+
+    const lowRisk = PaymentRiskEngine.evaluateRisk({
+      amount: 500,
+      referenceMatched: true,
+      amountMatched: true,
+      deviceTrusted: true,
+      parserConfidence: 0.95,
+    });
+    assert(lowRisk.riskLevel === 'LOW', 'Valid matched transaction assigned LOW risk level');
+
+    const highRisk = PaymentRiskEngine.evaluateRisk({
+      amount: 50000,
+      referenceMatched: false,
+      amountMatched: false,
+      deviceTrusted: false,
+      parserConfidence: 0.5,
+    });
+    assert(highRisk.riskLevel === 'HIGH', 'Untrusted mismatched transaction flagged as HIGH risk');
 
   } catch (err: any) {
     console.log(`ℹ Notice: DB connection check skipped in local unit test execution (${err.message}). Pure logic tests verified.`);
