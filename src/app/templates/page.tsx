@@ -55,14 +55,14 @@ export default function TemplatesPage() {
         {/* Flagship Hero Banner */}
         <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-slate-950 border border-indigo-500/30 rounded-3xl p-8 sm:p-10 shadow-2xl relative overflow-hidden text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
-            <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/30 inline-flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400" /> EarnSpace Website Studio Ecosystem
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 inline-flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> 🎁 1-Month Free Trial for Every User (0 BDT)
             </span>
             <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
-              Create Your Creator Website <span className="text-indigo-400">In Minutes.</span>
+              Pick Any Ready-Made Template <span className="text-emerald-400">Free For 30 Days.</span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Showcase your content, grow your audience, sell digital products, accept fan support, and build your personal brand without writing code.
+              Build your professional website with zero code. All templates come pre-configured with monetized ad slots, digital store checkout (bKash & Nagad), and fan tipping.
             </p>
           </div>
 

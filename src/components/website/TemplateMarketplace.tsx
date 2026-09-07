@@ -54,28 +54,28 @@ export function TemplateMarketplace({ onSelectTemplate, onPreviewTemplate }: Tem
 
   return (
     <div className="space-y-6 text-slate-100 font-sans">
-      {/* Ready-Made Income Engine Banner */}
-      <div className="bg-gradient-to-r from-emerald-950/80 via-slate-900 to-indigo-950/80 border border-emerald-500/30 rounded-3xl p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500 text-slate-950 uppercase tracking-wider">
-              💰 Ready-Made Income Engine
+      {/* Ready-Made Income Engine & 1-Month Free Trial Banner */}
+      <div className="bg-gradient-to-r from-emerald-950/90 via-slate-900 to-indigo-950/90 border border-emerald-500/40 rounded-3xl p-6 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-5 relative overflow-hidden">
+        <div className="space-y-2 relative z-10">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-black px-3 py-1 rounded-full bg-emerald-500 text-slate-950 uppercase tracking-wider shadow-md">
+              🎁 1-Month Free Trial Included
             </span>
-            <span className="text-xs text-emerald-400 font-semibold">100% Monetization Ready</span>
+            <span className="text-xs text-emerald-400 font-bold">0 BDT / Free for 30 Days</span>
           </div>
-          <h2 className="text-lg font-black text-white">Turn Every Template Into a Ready-Made Earning Website</h2>
+          <h2 className="text-xl sm:text-2xl font-black text-white">Pick Any Template & Launch Your Earning Website Free!</h2>
           <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-            Choose any template below — each comes fully pre-configured with monetized ad slots, digital store checkout (bKash & Nagad), and fan tipping. Start earning revenue share immediately upon launching your space.
+            Every user gets 1 month of full free access to any template. Pre-configured with monetized ad slots, digital product store (bKash/Nagad), and fan tipping. Test drive your website with zero risk!
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="px-3 py-2 bg-slate-900/80 border border-slate-700/60 rounded-2xl text-center">
-            <div className="text-xs font-mono text-emerald-400 font-bold">50-70%</div>
-            <div className="text-[10px] text-slate-400">Ad RevShare</div>
+        <div className="flex items-center gap-2 relative z-10 shrink-0">
+          <div className="px-4 py-2.5 bg-slate-900/90 border border-emerald-500/30 rounded-2xl text-center shadow-lg">
+            <div className="text-sm font-mono text-emerald-400 font-black">30 Days</div>
+            <div className="text-[10px] text-slate-400 font-bold">Free Trial Period</div>
           </div>
-          <div className="px-3 py-2 bg-slate-900/80 border border-slate-700/60 rounded-2xl text-center">
-            <div className="text-xs font-mono text-indigo-400 font-bold">bKash/Nagad</div>
-            <div className="text-[10px] text-slate-400">Direct Payouts</div>
+          <div className="px-4 py-2.5 bg-slate-900/90 border border-indigo-500/30 rounded-2xl text-center shadow-lg">
+            <div className="text-sm font-mono text-indigo-400 font-black">bKash/Nagad</div>
+            <div className="text-[10px] text-slate-400 font-bold">Direct Payouts</div>
           </div>
         </div>
       </div>
@@ -156,7 +156,7 @@ export function TemplateMarketplace({ onSelectTemplate, onPreviewTemplate }: Tem
                     {tpl.category}
                   </span>
                   <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 backdrop-blur-md flex items-center gap-0.5">
-                    💰 Ready Income Site
+                    🎁 30-Day Free Trial
                   </span>
                 </div>
                 <button
@@ -182,7 +182,7 @@ export function TemplateMarketplace({ onSelectTemplate, onPreviewTemplate }: Tem
               <div className="pt-2 border-t border-slate-800 space-y-2">
                 <div className="flex items-center justify-between text-[11px] text-slate-400">
                   <span>{tpl.blocks?.length || 4} Sections</span>
-                  <span className="font-semibold text-slate-300">{tpl.style} Design</span>
+                  <span className="font-semibold text-emerald-400">0 BDT for 30 Days</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -194,9 +194,9 @@ export function TemplateMarketplace({ onSelectTemplate, onPreviewTemplate }: Tem
                   </button>
                   <button
                     onClick={() => onSelectTemplate(tpl)}
-                    className="py-2 px-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-1 transition-colors"
+                    className="py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-1 transition-colors"
                   >
-                    <Zap className="w-3.5 h-3.5" /> Use Template
+                    <Zap className="w-3.5 h-3.5" /> Start Free Trial
                   </button>
                 </div>
               </div>
