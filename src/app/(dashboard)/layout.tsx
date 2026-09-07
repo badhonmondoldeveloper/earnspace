@@ -2,6 +2,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { RightSidebar } from '@/components/layout/RightSidebar';
 import { MobileNav } from '@/components/layout/MobileNav';
+import { AiMonetizationAssistant } from '@/components/ai/AiMonetizationAssistant';
 import { getCurrentUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 
@@ -30,6 +31,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       {/* Mobile Bottom Navigation Bar */}
       <MobileNav username={user.username} />
+
+      {/* Futuristic AI Creator Assistant */}
+      <AiMonetizationAssistant user={user} />
     </div>
   );
 }

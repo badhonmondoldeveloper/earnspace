@@ -98,8 +98,8 @@ export function Navbar({ initialUser }: { initialUser?: any }) {
   const centerTabs = [
     { label: 'Home', href: '/dashboard', icon: Home },
     { label: 'Watch', href: '/reels', icon: Tv },
-    { label: 'Website', href: '/dashboard/website', icon: Globe },
-    { label: 'Studio', href: '/creator', icon: LayoutDashboard },
+    { label: 'Marketplace', href: '/marketplace', icon: Globe },
+    { label: 'Website Studio', href: '/dashboard/website', icon: LayoutDashboard },
     { label: 'Reels', href: '/stories', icon: Film },
   ];
 
