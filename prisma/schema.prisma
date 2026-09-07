@@ -35,6 +35,7 @@ model User {
   storyViews          StoryView[]           @relation("ViewerRelation")
   blogs               Blog[]
   pages               Page[]
+  templateFavorites   WebsiteTemplateFavorite[]
   following           Follow[]              @relation("FollowerRelation")
   followers           Follow[]              @relation("FollowingRelation")
   blocksSent          Block[]               @relation("BlockerRelation")
@@ -361,13 +362,65 @@ model PageSetting {
   id                 String   @id @default(uuid())
   pageId             String   @unique
   page               Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  templateId         String?
   theme              String   @default("modern")
   typography         String   @default("sans")
   colorsJson         String   @default("{}")
   layout             String   @default("single-column")
   customSettingsJson String   @default("{}")
+  brandKitJson       String   @default("{}")
+  seoTitle           String?
+  seoDescription     String?
+  ogImage            String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+}
+
+model WebsiteTemplate {
+  id              String   @id @default(uuid())
+  slug            String   @unique
+  name            String
+  description     String?
+  category        String   @default("Creators")
+  subcategory     String?
+  style           String   @default("Modern")
+  isPro           Boolean  @default(false)
+  isFeatured      Boolean  @default(false)
+  isPopular       Boolean  @default(false)
+  isNew           Boolean  @default(true)
+  previewImage    String?
+  schemaJson      String   @default("{}")
+  version         Int      @default(1)
+  usesCount       Int      @default(0)
+  favoritesCount  Int      @default(0)
+  status          String   @default("published")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  favorites       WebsiteTemplateFavorite[]
+}
+
+model WebsiteTemplateCategory {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  name        String
+  icon        String?
+  description String?
+  parentId    String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WebsiteTemplateFavorite {
+  id         String          @id @default(uuid())
+  userId     String
+  templateId String
+  template   WebsiteTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime        @default(now())
+
+  @@unique([userId, templateId])
 }
 
 model Follow {

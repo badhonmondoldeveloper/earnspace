@@ -4,11 +4,14 @@ import { useState, useEffect } from 'react';
 import {
   Plus, Trash2, Globe, Eye, Save, GripVertical, Sparkles, CheckCircle2,
   ArrowUp, ArrowDown, Layout, Palette, Image as ImageIcon, Video, Link2,
-  Briefcase, BookOpen, Mail, Sliders, Edit3, User
+  Briefcase, BookOpen, Mail, Sliders, Edit3, User, Compass, QrCode, Share2
 } from 'lucide-react';
 import Link from 'next/link';
 import { FacebookProfileSpace } from '@/components/space/FacebookProfileSpace';
 import { EditFacebookProfileModal } from '@/components/modals/EditFacebookProfileModal';
+import { ThemeBrandKitDrawer } from '@/components/website/ThemeBrandKitDrawer';
+import { SeoQrModal } from '@/components/website/SeoQrModal';
+import { TemplateOnboardingModal } from '@/components/website/TemplateOnboardingModal';
 
 export interface Block {
   id: string;
@@ -16,15 +19,6 @@ export interface Block {
   contentJson: string;
   visibility: boolean;
 }
-
-const THEMES = [
-  { id: 'modern', name: 'Modern Dark', bg: 'bg-slate-950', accent: 'border-indigo-500 text-indigo-400' },
-  { id: 'minimal', name: 'Minimal Light', bg: 'bg-white', accent: 'border-slate-900 text-slate-900' },
-  { id: 'cyber', name: 'Neon Cyber', bg: 'bg-black', accent: 'border-cyan-500 text-cyan-400' },
-  { id: 'creator', name: 'Creator Pro', bg: 'bg-slate-900', accent: 'border-brand-500 text-brand-400' },
-  { id: 'elegant', name: 'Corporate Elegant', bg: 'bg-zinc-950', accent: 'border-amber-500 text-amber-400' },
-  { id: 'sunset', name: 'Warm Sunset', bg: 'bg-stone-950', accent: 'border-rose-500 text-rose-400' },
-];
 
 export default function WebsiteBuilderPage() {
   const [page, setPage] = useState<any>(null);
@@ -37,7 +31,12 @@ export default function WebsiteBuilderPage() {
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [activeTab, setActiveTab] = useState<'preview' | 'editor' | 'settings'>('preview');
+
+  // Modals & Drawers
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const [isThemeDrawerOpen, setIsThemeDrawerOpen] = useState(false);
+  const [isSeoQrModalOpen, setIsSeoQrModalOpen] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/v1/auth/me')
@@ -68,9 +67,9 @@ export default function WebsiteBuilderPage() {
   const handleAddBlock = (type: Block['type']) => {
     let initialContent = {};
     if (type === 'hero') {
-      initialContent = { title: 'Welcome to My Space', subtitle: 'Digital Creator & Entrepreneur', ctaText: 'Explore My Space', ctaUrl: '#' };
+      initialContent = { title: `Welcome to ${user?.username || 'My'}'s Space`, subtitle: 'Digital Creator & Entrepreneur', ctaText: 'Explore My Space', ctaUrl: '#' };
     } else if (type === 'text') {
-      initialContent = { title: 'About Me', body: 'Share your journey, mission, and background here.' };
+      initialContent = { title: 'About Me', body: profile?.bio || 'Share your journey, mission, and background here.' };
     } else if (type === 'links') {
       initialContent = { title: 'My Custom Links', links: [{ title: 'My Portfolio', url: 'https://example.com' }, { title: 'YouTube Channel', url: 'https://youtube.com' }] };
     } else if (type === 'gallery') {
@@ -78,11 +77,11 @@ export default function WebsiteBuilderPage() {
     } else if (type === 'video') {
       initialContent = { title: 'Featured Video', videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', description: 'Check out my latest featured project video.' };
     } else if (type === 'services') {
-      initialContent = { title: 'Services & Products', items: [{ name: 'Brand Consultation', price: '$99', description: '1-on-1 strategy session for creators.', link: '#' }] };
+      initialContent = { title: 'Services & Products', items: [{ name: 'Brand Consultation', price: '৳1,500', description: '1-on-1 strategy session for creators.', link: '#' }] };
     } else if (type === 'articles') {
       initialContent = { title: 'Latest Published Articles', limit: 3 };
     } else if (type === 'contact') {
-      initialContent = { title: 'Get In Touch', email: 'creator@example.com', location: 'Dhaka, Bangladesh', showSocials: true };
+      initialContent = { title: 'Get In Touch', email: user?.email || 'creator@example.com', location: profile?.location || 'Dhaka, Bangladesh', showSocials: true };
     }
 
     const newBlock: Block = {
@@ -120,352 +119,322 @@ export default function WebsiteBuilderPage() {
     setBlocks(updated);
   };
 
-  const handleSave = async () => {
-    if (!page) return;
+  const handleSavePage = async () => {
+    if (!page?.slug) return;
     setSaving(true);
     setSuccessMsg('');
+
     try {
       const res = await fetch(`/api/v1/pages/${page.slug}/blocks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          blocks,
           title: pageTitle,
           description: pageDescription,
-          settings: { theme: selectedTheme },
+          theme: selectedTheme,
+          blocks: blocks.map((b, idx) => ({
+            type: b.type,
+            position: idx,
+            contentJson: b.contentJson,
+            visibility: b.visibility,
+          })),
         }),
       });
+
       const data = await res.json();
       if (data.success) {
-        setSuccessMsg('Digital Space updated & published live!');
-        setTimeout(() => setSuccessMsg(''), 4000);
+        setSuccessMsg('Website changes published successfully!');
+        setTimeout(() => setSuccessMsg(''), 3000);
+      } else {
+        alert(data.message || 'Failed to save page');
       }
-    } catch (e) {
-      console.error('Save blocks error:', e);
+    } catch (err) {
+      console.error(err);
     } finally {
       setSaving(false);
     }
   };
 
+  const parseJson = (jsonStr: string) => {
+    try {
+      return JSON.parse(jsonStr);
+    } catch {
+      return {};
+    }
+  };
+
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+    <div className="space-y-6 pb-12 font-sans">
+      {/* Top Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <Globe className="w-6 h-6 text-brand-500" />
-            <span>Facebook Profile Digital Space Studio</span>
-          </h1>
-          <p className="text-xs text-slate-500">
-            Customize your 1:1 Facebook Profile Space live at <code className="text-brand-500 font-mono">/space/{page?.slug || user?.username || 'username'}</code>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <Globe className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+              EarnSpace Website Studio
+            </h1>
+            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+              PRO BUILDER
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Build, design, and publish your personal creator website with 65+ templates and modular blocks.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            onClick={() => setIsEditProfileModalOpen(true)}
-            className="px-4 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition flex items-center gap-1.5 shadow-md shadow-blue-600/20"
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/templates"
+            className="px-3.5 py-2 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 hover:bg-indigo-100 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors"
           >
-            <Edit3 className="w-4 h-4" />
-            <span>Edit Facebook Profile Info</span>
+            <Layout className="w-4 h-4" /> Explore 65+ Templates
+          </Link>
+          <button
+            onClick={() => setIsOnboardingOpen(true)}
+            className="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors"
+          >
+            <Compass className="w-4 h-4 text-cyan-400" /> Smart Advisor
+          </button>
+          <button
+            onClick={() => setIsThemeDrawerOpen(true)}
+            className="px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl flex items-center gap-1.5"
+          >
+            <Palette className="w-4 h-4 text-pink-400" /> Theme & Brand
+          </button>
+          <button
+            onClick={() => setIsSeoQrModalOpen(true)}
+            className="px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl flex items-center gap-1.5"
+          >
+            <QrCode className="w-4 h-4 text-emerald-400" /> SEO & QR
           </button>
 
-          {page && (
-            <Link
-              href={`/space/${page.slug}`}
-              target="_blank"
-              className="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-1.5"
-            >
-              <Eye className="w-4 h-4" />
-              <span>Open Live Space</span>
-            </Link>
-          )}
+          <Link
+            href={`/space/${user?.username}`}
+            target="_blank"
+            className="px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl flex items-center gap-1.5"
+          >
+            <Eye className="w-4 h-4" /> Live Site
+          </Link>
 
           <button
-            onClick={handleSave}
+            onClick={handleSavePage}
             disabled={saving}
-            className="px-5 py-2 text-xs font-bold rounded-xl bg-brand-500 hover:bg-brand-600 text-white transition shadow-md shadow-brand-500/20 disabled:opacity-50 flex items-center gap-1.5"
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 transition-all disabled:opacity-50"
           >
-            <Save className="w-4 h-4" />
-            <span>{saving ? 'Publishing...' : 'Save & Publish Live'}</span>
+            <Save className="w-4 h-4" /> {saving ? 'Publishing...' : 'Publish Changes'}
           </button>
         </div>
       </div>
 
       {successMsg && (
-        <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2 font-bold">
-          <CheckCircle2 className="w-4 h-4" />
-          <span>{successMsg}</span>
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-2xl flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4" /> {successMsg}
         </div>
       )}
 
-      {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 text-xs font-semibold overflow-x-auto no-scrollbar">
+      {/* Mode Switcher Tabs */}
+      <div className="flex border-b border-slate-200 dark:border-slate-800">
         <button
           onClick={() => setActiveTab('preview')}
-          className={`pb-2 px-3 transition border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
-            activeTab === 'preview' ? 'border-brand-500 text-brand-500' : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
+          className={`px-5 py-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${
+            activeTab === 'preview'
+              ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
+              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
           }`}
         >
-          <User className="w-4 h-4" />
-          <span>Facebook Profile Live Preview</span>
+          <Eye className="w-4 h-4" /> Visual Studio Canvas
         </button>
-
         <button
           onClick={() => setActiveTab('editor')}
-          className={`pb-2 px-3 transition border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
-            activeTab === 'editor' ? 'border-brand-500 text-brand-500' : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
+          className={`px-5 py-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${
+            activeTab === 'editor'
+              ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
+              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
           }`}
         >
-          <Layout className="w-4 h-4" />
-          <span>Block Layout Builder</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('settings')}
-          className={`pb-2 px-3 transition border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
-            activeTab === 'settings' ? 'border-brand-500 text-brand-500' : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <Sliders className="w-4 h-4" />
-          <span>Theme & Page Settings</span>
+          <Sliders className="w-4 h-4" /> Modular Block Editor ({blocks.length})
         </button>
       </div>
 
-      {/* TAB 1: FACEBOOK PROFILE LIVE PREVIEW */}
+      {/* TAB 1: VISUAL CANVAS */}
       {activeTab === 'preview' && (
-        <div className="rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xl bg-white dark:bg-slate-950">
-          <FacebookProfileSpace
-            user={user || { username: 'creator' }}
-            profile={profile || {}}
-            blocks={blocks}
-            isOwner={true}
-          />
+        <div className="space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xl">
+            <FacebookProfileSpace
+              user={user}
+              profile={profile}
+              blocks={blocks}
+              isOwner={true}
+            />
+          </div>
         </div>
       )}
 
-      {/* TAB 2: SETTINGS */}
-      {activeTab === 'settings' && (
+      {/* TAB 2: BLOCK EDITOR */}
+      {activeTab === 'editor' && (
         <div className="space-y-6">
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Palette className="w-4 h-4 text-brand-500" />
-              <span>Choose Space Theme</span>
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {THEMES.map((t) => (
-                <div
-                  key={t.id}
-                  onClick={() => setSelectedTheme(t.id)}
-                  className={`p-4 rounded-xl border-2 cursor-pointer transition flex flex-col justify-between h-24 ${t.bg} ${
-                    selectedTheme === t.id ? 'border-brand-500 shadow-md ring-2 ring-brand-500/20' : 'border-slate-700 hover:border-slate-500'
-                  }`}
+          {/* Add Block Options */}
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+            <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Add Content & Modular Blocks
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { type: 'hero', label: 'Hero Banner', icon: Layout },
+                { type: 'text', label: 'About / Text', icon: BookOpen },
+                { type: 'links', label: 'Custom Links', icon: Link2 },
+                { type: 'gallery', label: 'Image Gallery', icon: ImageIcon },
+                { type: 'video', label: 'Featured Video', icon: Video },
+                { type: 'services', label: 'Services / Store', icon: Briefcase },
+                { type: 'articles', label: 'Latest Articles', icon: BookOpen },
+                { type: 'contact', label: 'Contact Details', icon: Mail },
+              ].map((b) => (
+                <button
+                  key={b.type}
+                  onClick={() => handleAddBlock(b.type as any)}
+                  className="p-3 bg-slate-50 dark:bg-slate-800/60 hover:bg-indigo-50 dark:hover:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700/60 text-xs font-bold flex items-center gap-2 transition-all"
                 >
-                  <span className="text-xs font-bold text-white">{t.name}</span>
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border self-start ${t.accent}`}>
-                    {selectedTheme === t.id ? 'Active' : 'Select'}
-                  </span>
-                </div>
+                  <b.icon className="w-4 h-4 text-indigo-500 shrink-0" />
+                  <span>{b.label}</span>
+                </button>
               ))}
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">SEO & Space Details</h3>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Space Title</label>
-                <input
-                  type="text"
-                  value={pageTitle}
-                  onChange={(e) => setPageTitle(e.target.value)}
-                  placeholder="e.g. Alex Rivera's Creator Hub"
-                  className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Description / Subtitle</label>
-                <textarea
-                  rows={2}
-                  value={pageDescription}
-                  onChange={(e) => setPageDescription(e.target.value)}
-                  placeholder="Welcome to my official digital space on EarnSpace."
-                  className="w-full p-3 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white resize-none focus:outline-none focus:border-brand-500"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 3: BLOCK LAYOUT EDITOR */}
-      {activeTab === 'editor' && (
-        <div className="space-y-6">
-          <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
-            <span className="text-xs font-semibold text-slate-500 block">Add Dynamic Section Block:</span>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={() => handleAddBlock('hero')}
-                className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-brand-500 hover:text-white transition flex items-center gap-1.5"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>+ Hero Banner</span>
-              </button>
-              <button
-                onClick={() => handleAddBlock('text')}
-                className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-brand-500 hover:text-white transition flex items-center gap-1.5"
-              >
-                <Layout className="w-3.5 h-3.5" />
-                <span>+ Text / About</span>
-              </button>
-              <button
-                onClick={() => handleAddBlock('links')}
-                className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-brand-500 hover:text-white transition flex items-center gap-1.5"
-              >
-                <Link2 className="w-3.5 h-3.5" />
-                <span>+ Custom Links</span>
-              </button>
-              <button
-                onClick={() => handleAddBlock('gallery')}
-                className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-brand-500 hover:text-white transition flex items-center gap-1.5"
-              >
-                <ImageIcon className="w-3.5 h-3.5" />
-                <span>+ Photo Gallery</span>
-              </button>
-              <button
-                onClick={() => handleAddBlock('video')}
-                className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-brand-500 hover:text-white transition flex items-center gap-1.5"
-              >
-                <Video className="w-3.5 h-3.5" />
-                <span>+ Featured Video</span>
-              </button>
-              <button
-                onClick={() => handleAddBlock('services')}
-                className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-brand-500 hover:text-white transition flex items-center gap-1.5"
-              >
-                <Briefcase className="w-3.5 h-3.5" />
-                <span>+ Services / Products</span>
-              </button>
-              <button
-                onClick={() => handleAddBlock('articles')}
-                className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-brand-500 hover:text-white transition flex items-center gap-1.5"
-              >
-                <BookOpen className="w-3.5 h-3.5" />
-                <span>+ Articles Feed</span>
-              </button>
-              <button
-                onClick={() => handleAddBlock('contact')}
-                className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-brand-500 hover:text-white transition flex items-center gap-1.5"
-              >
-                <Mail className="w-3.5 h-3.5" />
-                <span>+ Contact & Social</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {blocks.length === 0 ? (
-              <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs text-slate-400 space-y-2">
-                <Sparkles className="w-8 h-8 mx-auto text-brand-500" />
-                <p className="font-semibold text-slate-900 dark:text-white">Your Space is currently empty.</p>
-                <p>Click any button above to add custom dynamic sections to your personal website.</p>
-              </div>
-            ) : (
-              blocks.map((block, index) => {
-                let content: any = {};
-                try {
-                  content = JSON.parse(block.contentJson || '{}');
-                } catch (e) {}
-
-                return (
-                  <div key={block.id} className={`p-5 rounded-2xl bg-white dark:bg-slate-900 border space-y-4 shadow-sm transition ${block.visibility ? 'border-slate-200 dark:border-slate-800' : 'border-dashed border-rose-300 dark:border-rose-900/60 opacity-60'}`}>
-                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                      <div className="flex items-center gap-2">
-                        <GripVertical className="w-4 h-4 text-slate-400 cursor-grab" />
-                        <span className="text-xs font-bold text-brand-500 uppercase tracking-wider">
-                          Section #{index + 1}: {block.type}
-                        </span>
-                        {!block.visibility && (
-                          <span className="px-2 py-0.5 text-[10px] rounded bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 font-semibold">
-                            Hidden
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => handleMoveBlock(index, 'up')}
-                          disabled={index === 0}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 transition"
-                          title="Move Up"
-                        >
-                          <ArrowUp className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleMoveBlock(index, 'down')}
-                          disabled={index === blocks.length - 1}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 transition"
-                          title="Move Down"
-                        >
-                          <ArrowDown className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleToggleVisibility(index)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-brand-500 transition"
-                          title="Toggle Visibility"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleRemoveBlock(index)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 transition"
-                          title="Delete Block"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+          {/* Block Reordering & Content Editor Cards */}
+          <div className="space-y-3">
+            {blocks.map((block, idx) => {
+              const content = parseJson(block.contentJson);
+              return (
+                <div
+                  key={block.id || idx}
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3"
+                >
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono font-bold text-slate-400">#{idx + 1}</span>
+                      <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                        {block.type}
+                      </span>
                     </div>
 
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleMoveBlock(idx, 'up')}
+                        disabled={idx === 0}
+                        className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 disabled:opacity-30"
+                      >
+                        <ArrowUp className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleMoveBlock(idx, 'down')}
+                        disabled={idx === blocks.length - 1}
+                        className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 disabled:opacity-30"
+                      >
+                        <ArrowDown className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleRemoveBlock(idx)}
+                        className="p-1 rounded hover:bg-rose-500/10 text-rose-500"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Inline Block Field Inputs */}
+                  <div className="space-y-2 text-xs">
                     {block.type === 'hero' && (
-                      <div className="space-y-3">
-                        <div className="grid sm:grid-cols-2 gap-3">
-                          <div>
-                            <label className="text-[11px] font-semibold text-slate-500">Hero Main Title</label>
-                            <input
-                              type="text"
-                              value={content.title || ''}
-                              onChange={(e) => handleUpdateBlockContent(index, { ...content, title: e.target.value })}
-                              className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[11px] font-semibold text-slate-500">Hero Subtitle</label>
-                            <input
-                              type="text"
-                              value={content.subtitle || ''}
-                              onChange={(e) => handleUpdateBlockContent(index, { ...content, subtitle: e.target.value })}
-                              className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
-                            />
-                          </div>
-                        </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          placeholder="Hero Title"
+                          value={content.title || ''}
+                          onChange={(e) => handleUpdateBlockContent(idx, { ...content, title: e.target.value })}
+                          className="px-3 py-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Hero Subtitle"
+                          value={content.subtitle || ''}
+                          onChange={(e) => handleUpdateBlockContent(idx, { ...content, subtitle: e.target.value })}
+                          className="px-3 py-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl"
+                        />
+                      </div>
+                    )}
+
+                    {block.type === 'text' && (
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          placeholder="Section Title"
+                          value={content.title || ''}
+                          onChange={(e) => handleUpdateBlockContent(idx, { ...content, title: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl"
+                        />
+                        <textarea
+                          rows={3}
+                          placeholder="Body Content..."
+                          value={content.body || ''}
+                          onChange={(e) => handleUpdateBlockContent(idx, { ...content, body: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl"
+                        />
                       </div>
                     )}
                   </div>
-                );
-              })
-            )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* EDIT PROFILE MODAL */}
-      <EditFacebookProfileModal
-        isOpen={isEditProfileModalOpen}
-        onClose={() => setIsEditProfileModalOpen(false)}
-        user={user || { username: 'creator' }}
-        profile={profile || {}}
-        onSaved={(updated) => setProfile((prev: any) => ({ ...prev, ...updated }))}
+      {/* Drawers & Modals */}
+      <ThemeBrandKitDrawer
+        isOpen={isThemeDrawerOpen}
+        onClose={() => setIsThemeDrawerOpen(false)}
+        selectedTheme={selectedTheme}
+        onSelectTheme={(themeId) => setSelectedTheme(themeId)}
       />
+
+      <SeoQrModal
+        isOpen={isSeoQrModalOpen}
+        onClose={() => setIsSeoQrModalOpen(false)}
+        websiteUrl={`https://earnspace.app/space/${user?.username}`}
+        initialSeoTitle={pageTitle}
+        initialSeoDesc={pageDescription}
+        onSaveSeo={(t, d) => {
+          setPageTitle(t);
+          setPageDescription(d);
+        }}
+      />
+
+      <TemplateOnboardingModal
+        isOpen={isOnboardingOpen}
+        onClose={() => setIsOnboardingOpen(false)}
+        onSelectRecommended={(answers) => {
+          window.location.href = `/templates?category=${encodeURIComponent(answers.doWhat || 'Creators')}`;
+        }}
+      />
+
+      {isEditProfileModalOpen && (
+        <EditFacebookProfileModal
+          isOpen={isEditProfileModalOpen}
+          onClose={() => setIsEditProfileModalOpen(false)}
+          user={user}
+          profile={profile}
+          onSaved={() => {
+            fetch('/api/v1/auth/me')
+              .then((res) => res.json())
+              .then((data) => {
+                if (data.success && data.data) {
+                  setUser(data.data);
+                  setProfile(data.data.profile || {});
+                }
+              });
+          }}
+        />
+      )}
     </div>
   );
 }
