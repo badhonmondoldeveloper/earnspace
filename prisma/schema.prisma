@@ -92,6 +92,10 @@ model User {
   paymentTransactions      PaymentTransaction[]
   transfersSent            WalletTransfer[]          @relation("TransferSender")
   transfersReceived        WalletTransfer[]          @relation("TransferRecipient")
+
+  // Universal Media Library Relations
+  mediaFolders             MediaFolder[]
+  mediaAssets              MediaAsset[]
 }
 
 model Profile {
@@ -1585,8 +1589,55 @@ model WalletTransfer {
   recipient User @relation("TransferRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
 }
 
+// ==========================================
+// UNIVERSAL MEDIA LIBRARY & STORAGE ENGINE
+// ==========================================
 
+model MediaFolder {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  color     String?  @default("#6366f1")
+  parentId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent   MediaFolder?  @relation("SubFolders", fields: [parentId], references: [id], onDelete: SetNull)
+  children MediaFolder[] @relation("SubFolders")
+  assets   MediaAsset[]
+}
 
+model MediaAsset {
+  id          String   @id @default(uuid())
+  userId      String
+  folderId    String?
+  name        String
+  url         String
+  fileType    String   // image, video, audio, document, archive
+  mimeType    String
+  fileSize    Int      // bytes
+  width       Int?
+  height      Int?
+  duration    Float?   // seconds
+  altText     String?
+  purpose     String?  @default("general") // avatar, cover, page_block, post, story, reel, ad_creative, product, blog
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder MediaFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  usages MediaUsage[]
+}
 
+model MediaUsage {
+  id         String   @id @default(uuid())
+  assetId    String
+  entityType String   // page, post, story, reel, product, blog, profile, ad
+  entityId   String
+  field      String?  // coverImage, avatar, block_hero, videoUrl, image
+  createdAt  DateTime @default(now())
+
+  asset MediaAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+}

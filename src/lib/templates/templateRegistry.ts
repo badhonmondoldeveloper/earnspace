@@ -465,4 +465,247 @@ export const TEMPLATE_REGISTRY: TemplateDefinition[] = [
       },
     ],
   },
+
+  // ==================== MEDIA KIT & CREATOR SPONSORSHIP ====================
+  {
+    id: 'creator-media-kit-elite',
+    slug: 'creator-media-kit-elite',
+    name: 'Media Kit & Sponsorship Desk',
+    description: 'Professional media kit for creators showing audience stats, demographics, previous brand deals, and rate card.',
+    category: 'Creators',
+    subcategory: 'Media Kit',
+    style: 'Luxury',
+    isPro: true,
+    isFeatured: true,
+    themePreset: 'luxury',
+    blocks: [
+      {
+        type: 'hero',
+        content: {
+          title: 'Official Media Kit & Brand Collaboration Desk 📊',
+          subtitle: 'Reaching over 250,000 tech & lifestyle enthusiasts in Bangladesh & South Asia monthly.',
+          ctaText: 'Download PDF Rate Card',
+          ctaUrl: '#contact',
+        },
+      },
+      {
+        type: 'services',
+        content: {
+          title: 'Audience Demographics & Reach',
+          items: [
+            { name: 'Monthly YouTube Views', price: '450,000+', description: '82% Bangladesh, 18% Overseas Diaspora. 68% Male, 32% Female (Ages 18-34).' },
+            { name: 'Facebook & Instagram Followers', price: '185,000+', description: 'High engagement reel interactions & story link clicks.' },
+          ],
+        },
+      },
+      {
+        type: 'services',
+        content: {
+          title: 'Sponsorship Packages',
+          items: [
+            { name: 'Dedicated YouTube Video', price: '৳45,000', description: '8-12 minute product review with link in description & pinned comment.' },
+            { name: 'Integrative Video Placement', price: '৳20,000', description: '60-90 second dedicated mid-roll integration.' },
+            { name: 'Instagram & Facebook Reel Package', price: '৳15,000', description: '1x Reel + 2x Stories with direct product tag & affiliate tracking.' },
+          ],
+        },
+      },
+      {
+        type: 'contact',
+        content: {
+          title: 'Book a Campaign',
+          email: 'brands@creator.com',
+          location: 'Dhaka, Bangladesh',
+          showSocials: true,
+        },
+      },
+    ],
+  },
+
+  // ==================== GAMING & STREAMING ====================
+  {
+    id: 'gaming-streamer-neon',
+    slug: 'gaming-streamer-neon',
+    name: 'Streamer Cyber Station',
+    description: 'Futuristic dark neon website for Twitch, YouTube, and Facebook Gaming streamers with live schedule & PC specs.',
+    category: 'Gaming & Streaming',
+    subcategory: 'Streamer',
+    style: 'Cyber',
+    isPro: false,
+    isFeatured: true,
+    themePreset: 'cyber',
+    blocks: [
+      {
+        type: 'hero',
+        content: {
+          title: 'LIVE ON STREAM • VALORANT & PUBG BATTLES 🎮',
+          subtitle: 'Daily streams starting 8:00 PM BST. Join the Discord squad!',
+          ctaText: 'Watch Live Stream',
+          ctaUrl: 'https://youtube.com',
+        },
+      },
+      {
+        type: 'links',
+        content: {
+          title: 'Stream Platforms & Community',
+          links: [
+            { title: '🔴 YouTube Gaming Channel', url: 'https://youtube.com' },
+            { title: '💜 Twitch Stream', url: 'https://twitch.tv' },
+            { title: '💬 Discord Gamer Hub (15k members)', url: 'https://discord.gg' },
+            { title: '☕ Support via bKash / Nagad Tip Jar', url: '/space/donate' },
+          ],
+        },
+      },
+      {
+        type: 'services',
+        content: {
+          title: 'Gaming Setup & Specs ⚡',
+          items: [
+            { name: 'Rig', price: 'i9-14900K + RTX 4090', description: '64GB DDR5 RAM, 4TB NVMe SSD' },
+            { name: 'Peripherals', price: 'Logitech Superlight 2', description: 'Wooting 60HE Keyboard, ASUS 360Hz Monitor' },
+          ],
+        },
+      },
+      {
+        type: 'contact',
+        content: {
+          title: 'Business & Team Inquiries',
+          email: 'esports@gamer.com',
+          showSocials: true,
+        },
+      },
+    ],
+  },
+
+  // ==================== MUSIC & AUDIO ====================
+  {
+    id: 'music-producer-studio',
+    slug: 'music-producer-studio',
+    name: 'Music Producer & Beat Store',
+    description: 'Sleek dark music hub for producers, singers, bands, and sound designers with track player and beat licensing.',
+    category: 'Music & Audio',
+    subcategory: 'Music Producer',
+    style: 'Sunset',
+    isPro: false,
+    isFeatured: true,
+    themePreset: 'sunset',
+    blocks: [
+      {
+        type: 'hero',
+        content: {
+          title: 'Custom Beats, Sound Design & Audio Production 🎵',
+          subtitle: 'Hip Hop, Lo-Fi, EDM, and Bangla Fusion Beats for Artists & Content Creators.',
+          ctaText: 'Listen to Latest Releases',
+          ctaUrl: '#tracks',
+        },
+      },
+      {
+        type: 'services',
+        content: {
+          title: 'Beat Licensing & Audio Services',
+          items: [
+            { name: 'MP3 Lease License', price: '৳1,500', description: 'Non-exclusive license for commercial streaming up to 100k plays.' },
+            { name: 'WAV Trackouts / Stems', price: '৳3,500', description: 'Full unmixed audio stems for studio recording & mastering.' },
+            { name: 'Exclusive Unlimited License', price: '৳15,000', description: 'Full ownership transfer with exclusive commercial rights.' },
+          ],
+        },
+      },
+      {
+        type: 'contact',
+        content: {
+          title: 'Book Studio Session',
+          email: 'studio@musicbeats.com',
+          location: 'Dhanmondi, Dhaka, Bangladesh',
+          showSocials: true,
+        },
+      },
+    ],
+  },
+
+  // ==================== HEALTH & FITNESS ====================
+  {
+    id: 'fitness-coach-pro',
+    slug: 'fitness-coach-pro',
+    name: 'Fitness Coach & Workout Hub',
+    description: 'High-energy landing page for personal trainers, gym coaches, and nutrition consultants.',
+    category: 'Health & Fitness',
+    subcategory: 'Fitness Coach',
+    style: 'Bold',
+    isPro: false,
+    isFeatured: true,
+    themePreset: 'bold',
+    blocks: [
+      {
+        type: 'hero',
+        content: {
+          title: 'Transform Your Body & Mind in 90 Days 💪',
+          subtitle: 'Certified Fitness Trainer & Nutritionist helping you build sustainable habits.',
+          ctaText: 'Start 90-Day Challenge',
+          ctaUrl: '#coaching',
+        },
+      },
+      {
+        type: 'services',
+        content: {
+          title: 'Coaching Programs',
+          items: [
+            { name: '1-on-1 Online Personal Coaching', price: '৳4,500/mo', description: 'Customized workout routine, daily meal plan, and weekly video check-ins.' },
+            { name: 'Home Workout Guide (No Equipment)', price: '৳999', description: 'Step-by-step PDF guide with exercise video links.' },
+          ],
+        },
+      },
+      {
+        type: 'contact',
+        content: {
+          title: 'Free Fitness Consultation',
+          email: 'coach@fitness.com',
+          showSocials: true,
+        },
+      },
+    ],
+  },
+
+  // ==================== PODCAST & BROADCAST ====================
+  {
+    id: 'podcast-studio-hub',
+    slug: 'podcast-studio-hub',
+    name: 'Podcast Studio & Show Hub',
+    description: 'Dedicated show website for podcasters with Spotify/Apple links, episode archives, and guest application form.',
+    category: 'Creators',
+    subcategory: 'Podcast',
+    style: 'Modern',
+    isPro: false,
+    isFeatured: true,
+    themePreset: 'modern',
+    blocks: [
+      {
+        type: 'hero',
+        content: {
+          title: 'The Dhaka Tech & Startup Podcast 🎙️',
+          subtitle: 'Weekly conversations with Bangladesh’s leading founders, tech pioneers, and creative leaders.',
+          ctaText: 'Listen on Spotify',
+          ctaUrl: 'https://spotify.com',
+        },
+      },
+      {
+        type: 'links',
+        content: {
+          title: 'Listen on Your Favorite Platform',
+          links: [
+            { title: '🟢 Spotify Podcast', url: 'https://spotify.com' },
+            { title: '🍎 Apple Podcasts', url: 'https://apple.com' },
+            { title: '🔴 YouTube Video Podcast', url: 'https://youtube.com' },
+          ],
+        },
+      },
+      {
+        type: 'contact',
+        content: {
+          title: 'Apply as a Podcast Guest',
+          email: 'guest@techpodcast.com',
+          showSocials: true,
+        },
+      },
+    ],
+  },
 ];
+
