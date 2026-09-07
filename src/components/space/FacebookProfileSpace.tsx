@@ -29,6 +29,7 @@ import { FacebookPostCard } from '@/components/social/FacebookPostCard';
 import { SmartAdSlot } from '@/components/ads/SmartAdSlot';
 import { EditFacebookProfileModal } from '@/components/modals/EditFacebookProfileModal';
 import UniversalCreateModal from '@/components/content/UniversalCreateModal';
+import { TemplateBlockRenderer } from '@/components/website/TemplateBlockRenderer';
 
 interface FacebookProfileSpaceProps {
   user: any;
@@ -321,8 +322,13 @@ export function FacebookProfileSpace({
               <SmartAdSlot slotName="PERSONAL_SPACE_SIDEBAR" creatorId={user?.id} />
             </div>
 
-            {/* RIGHT COLUMN: CREATE POST & FEED (7 cols) */}
+            {/* RIGHT COLUMN: TEMPLATE BLOCKS, CREATE POST & FEED (7 cols) */}
             <div className="lg:col-span-7 space-y-6">
+              {/* Applied Template Website Blocks */}
+              {blocks && blocks.length > 0 && (
+                <TemplateBlockRenderer blocks={blocks} />
+              )}
+
               {/* Facebook Create Post Composer Card */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 space-y-3 shadow-sm">
                 <div className="flex items-center gap-3">
