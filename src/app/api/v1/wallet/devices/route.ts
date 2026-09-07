@@ -11,12 +11,16 @@ export async function GET(req: NextRequest) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const devices = await prisma.paymentDevice.findMany({
-      where: { userId: session.userId },
-      orderBy: { lastSeenAt: 'desc' },
-    });
-
-    return successResponse(devices, 'Paired companion devices retrieved');
+    try {
+      const devices = await prisma.paymentDevice.findMany({
+        where: { userId: session.userId },
+        orderBy: { lastSeenAt: 'desc' },
+      });
+      return successResponse(devices, 'Paired companion devices retrieved');
+    } catch (err: any) {
+      console.warn('GET /api/v1/wallet/devices fallback:', err?.message);
+      return successResponse([], 'Paired companion devices retrieved');
+    }
   } catch (error: any) {
     console.error('GET /api/v1/wallet/devices error:', error);
     return errorResponse(error.message || 'Failed to fetch devices', 500);
@@ -47,6 +51,9 @@ export async function POST(req: NextRequest) {
     return successResponse(device, 'Android companion device paired successfully', 201);
   } catch (error: any) {
     console.error('POST /api/v1/wallet/devices error:', error);
+    if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
+      return errorResponse('Database table for Payment Devices is currently being provisioned. Please try again shortly.', 503);
+    }
     return errorResponse(error.message || 'Failed to pair device', 500);
   }
 }

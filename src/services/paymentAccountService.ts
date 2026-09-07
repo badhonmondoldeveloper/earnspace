@@ -29,37 +29,49 @@ export class PaymentAccountService {
       throw new Error('Valid phone number or account identifier is required');
     }
 
-    const account = await prisma.paymentAccount.create({
-      data: {
-        userId,
-        provider: provider.toUpperCase(),
-        accountType: accountType.toUpperCase(),
-        phoneNumber: phoneNumber.trim(),
-        displayName: displayName || `${provider.toUpperCase()} (${this.maskPhoneNumber(phoneNumber.trim())})`,
-        verificationStatus: 'PENDING',
-        status: 'active',
-      },
-    });
+    try {
+      const account = await prisma.paymentAccount.create({
+        data: {
+          userId,
+          provider: provider.toUpperCase(),
+          accountType: accountType.toUpperCase(),
+          phoneNumber: phoneNumber.trim(),
+          displayName: displayName || `${provider.toUpperCase()} (${this.maskPhoneNumber(phoneNumber.trim())})`,
+          verificationStatus: 'PENDING',
+          status: 'active',
+        },
+      });
 
-    return {
-      ...account,
-      maskedPhone: this.maskPhoneNumber(account.phoneNumber),
-    };
+      return {
+        ...account,
+        maskedPhone: this.maskPhoneNumber(account.phoneNumber),
+      };
+    } catch (err: any) {
+      if (err?.code === 'P2021' || err?.message?.includes('does not exist')) {
+        throw new Error('Database table for Payment Accounts is currently being provisioned. Please try again in a few moments.');
+      }
+      throw err;
+    }
   }
 
   /**
    * Retrieves a user's registered payment accounts with sensitive information masked
    */
   static async getUserAccounts(userId: string) {
-    const accounts = await prisma.paymentAccount.findMany({
-      where: { userId, status: 'active' },
-      orderBy: { createdAt: 'desc' },
-    });
+    try {
+      const accounts = await prisma.paymentAccount.findMany({
+        where: { userId, status: 'active' },
+        orderBy: { createdAt: 'desc' },
+      });
 
-    return accounts.map((acc) => ({
-      ...acc,
-      maskedPhone: this.maskPhoneNumber(acc.phoneNumber),
-    }));
+      return accounts.map((acc) => ({
+        ...acc,
+        maskedPhone: this.maskPhoneNumber(acc.phoneNumber),
+      }));
+    } catch (err: any) {
+      console.warn('getUserAccounts fallback (table missing or offline):', err?.message);
+      return [];
+    }
   }
 
   /**

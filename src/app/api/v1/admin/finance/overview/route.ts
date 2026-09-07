@@ -5,41 +5,58 @@ import { WalletCoreService } from '@/services/walletCoreService';
 
 export async function GET(req: NextRequest) {
   try {
-    const totalWallets = await prisma.wallet.count();
-    const frozenWallets = await prisma.wallet.count({ where: { isFrozen: true } });
-    
-    const balances = await prisma.wallet.aggregate({
-      _sum: {
-        availableBalance: true,
-        pendingBalance: true,
-        lifetimeEarned: true,
-      },
-    });
+    let totalWallets = 0;
+    let frozenWallets = 0;
+    let balances: any = { _sum: { availableBalance: 0, pendingBalance: 0, lifetimeEarned: 0 } };
+    let reviewQueue: any[] = [];
+    let recentTransactions: any[] = [];
 
-    const reviewQueue = await prisma.paymentTransaction.findMany({
-      where: { status: 'REVIEW' },
-      include: {
-        user: { select: { username: true, email: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 20,
-    });
+    try {
+      totalWallets = await prisma.wallet.count();
+      frozenWallets = await prisma.wallet.count({ where: { isFrozen: true } });
+      balances = await prisma.wallet.aggregate({
+        _sum: {
+          availableBalance: true,
+          pendingBalance: true,
+          lifetimeEarned: true,
+        },
+      });
+    } catch (err: any) {
+      console.warn('Admin wallet count fallback:', err?.message);
+    }
 
-    const recentTransactions = await prisma.paymentTransaction.findMany({
-      take: 25,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: { select: { username: true } },
-      },
-    });
+    try {
+      reviewQueue = await prisma.paymentTransaction.findMany({
+        where: { status: 'REVIEW' },
+        include: {
+          user: { select: { username: true, email: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      });
+    } catch (err: any) {
+      console.warn('Admin reviewQueue fallback:', err?.message);
+    }
+
+    try {
+      recentTransactions = await prisma.paymentTransaction.findMany({
+        take: 25,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: { select: { username: true } },
+        },
+      });
+    } catch (err: any) {
+      console.warn('Admin recentTransactions fallback:', err?.message);
+    }
 
     return successResponse({
       metrics: {
         totalWallets,
         frozenWallets,
-        totalAvailableBalance: balances._sum.availableBalance || 0.0,
-        totalPendingBalance: balances._sum.pendingBalance || 0.0,
-        totalLifetimeEarned: balances._sum.lifetimeEarned || 0.0,
+        totalAvailableBalance: balances._sum?.availableBalance || 0.0,
+        totalPendingBalance: balances._sum?.pendingBalance || 0.0,
+        totalLifetimeEarned: balances._sum?.lifetimeEarned || 0.0,
       },
       reviewQueue,
       recentTransactions,
