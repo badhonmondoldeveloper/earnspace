@@ -51,6 +51,16 @@ export default function CreatorEarningsPage() {
           </Link>
         </div>
 
+        {/* Monetization Model Notice Banner */}
+        <div className="bg-gradient-to-r from-slate-900 via-indigo-950/60 to-slate-900 border border-emerald-500/40 rounded-2xl p-5 shadow-lg space-y-1">
+          <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
+            <span>📢 Automatic 50% - 70% Ad Revenue Share</span>
+          </div>
+          <p className="text-xs text-slate-300 leading-relaxed">
+            Admin sets up house ads, advertiser campaigns, and ad networks across your public personal website space (<code className="text-emerald-400 font-mono">/space/username</code>). Every time a visitor views or clicks an ad on your website, your wallet balance is automatically credited with your revenue share!
+          </p>
+        </div>
+
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((i) => (

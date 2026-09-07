@@ -21,6 +21,8 @@ import {
   Settings,
   Shield,
   Wallet,
+  Store,
+  DollarSign,
 } from 'lucide-react';
 import UniversalCreateModal from '@/components/content/UniversalCreateModal';
 import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
@@ -96,11 +98,10 @@ export function Navbar({ initialUser }: { initialUser?: any }) {
   };
 
   const centerTabs = [
-    { label: 'Home', href: '/dashboard', icon: Home },
-    { label: 'Watch', href: '/reels', icon: Tv },
-    { label: 'Marketplace', href: '/marketplace', icon: Globe },
-    { label: 'Website Studio', href: '/dashboard/website', icon: LayoutDashboard },
-    { label: 'Reels', href: '/stories', icon: Film },
+    { label: 'Website Studio', href: '/dashboard', icon: LayoutDashboard },
+    { label: 'Template Marketplace', href: '/marketplace', icon: Globe },
+    { label: 'Digital Store', href: '/dashboard/products', icon: Store },
+    { label: 'Ad RevShare', href: '/creator/earnings', icon: DollarSign },
   ];
 
   return (
@@ -220,23 +221,13 @@ export function Navbar({ initialUser }: { initialUser?: any }) {
                   <Plus className="w-5 h-5 stroke-[2.5]" />
                 </button>
 
-                {/* Messenger Icon */}
+                {/* Wallet & Cashout Shortcut */}
                 <Link
-                  href="/messages"
-                  className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full relative transition"
-                  title="Messenger"
+                  href="/wallet"
+                  className="p-2 text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full relative transition"
+                  title="Wallet & bKash Cashout"
                 >
-                  <MessageSquare className="w-5 h-5" />
-                </Link>
-
-                {/* Notifications Bell */}
-                <Link
-                  href="/notifications"
-                  className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full relative transition"
-                  title="Notifications"
-                >
-                  <Bell className="w-5 h-5" />
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white dark:ring-slate-900" />
+                  <Wallet className="w-5 h-5" />
                 </Link>
 
                 {/* Profile Avatar Dropdown Menu */}
