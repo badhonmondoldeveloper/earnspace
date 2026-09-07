@@ -40,43 +40,46 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center px-4 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-      <div className="w-full max-w-md space-y-6">
-        <div className="text-center space-y-2">
-          <Link href="/" className="inline-flex items-center gap-2 font-bold text-2xl">
-            <div className="w-10 h-10 rounded-xl bg-brand-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
-              <Sparkles className="w-5 h-5" />
+    <div className="min-h-screen flex flex-col justify-center items-center px-4 bg-slate-950 text-slate-100 font-sans relative overflow-hidden">
+      {/* Background Lighting */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-600/10 blur-[130px] rounded-full pointer-events-none" />
+
+      <div className="w-full max-w-md space-y-6 relative z-10">
+        <div className="text-center space-y-3">
+          <Link href="/" className="inline-flex items-center gap-2 font-black text-2xl tracking-tight text-white">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-emerald-500 flex items-center justify-center text-white shadow-xl shadow-indigo-600/30">
+              <Sparkles className="w-5 h-5 fill-current" />
             </div>
-            <span>Earn<span className="text-brand-500">Space</span></span>
+            <span>Earn<span className="text-indigo-400">Space</span></span>
           </Link>
-          <h1 className="text-2xl font-bold tracking-tight">Welcome Back</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Log in to manage your space and content</p>
+          <h1 className="text-3xl font-black text-white">Welcome Back</h1>
+          <p className="text-xs text-slate-400">Sign in to manage your space, website, and creator earnings</p>
         </div>
 
         {error && (
-          <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="p-3.5 rounded-2xl bg-rose-950/50 border border-rose-800 text-rose-300 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
             <span>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Email or Username</label>
+        <form onSubmit={handleSubmit} className="bg-slate-900/90 p-8 rounded-3xl border border-slate-800 shadow-2xl space-y-5 backdrop-blur-xl">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-300">Email or Username</label>
             <input
               type="text"
               required
               value={emailOrUsername}
               onChange={(e) => setEmailOrUsername(e.target.value)}
               placeholder="e.g. creator or user@example.com"
-              className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-brand-500"
+              className="w-full px-4 py-3 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
             />
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <div className="flex justify-between items-center">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Password</label>
-              <Link href="/forgot-password" className="text-[10px] font-medium text-brand-500 hover:underline">
+              <label className="text-xs font-bold text-slate-300">Password</label>
+              <Link href="/forgot-password" className="text-[10px] font-semibold text-indigo-400 hover:underline">
                 Forgot password?
               </Link>
             </div>
@@ -86,23 +89,23 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-brand-500"
+              className="w-full px-4 py-3 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 text-xs font-bold rounded-xl bg-brand-500 hover:bg-brand-600 text-white transition shadow-md shadow-brand-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full py-3.5 text-xs font-extrabold rounded-2xl bg-gradient-to-r from-emerald-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white transition shadow-xl shadow-indigo-600/25 disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {loading ? 'Logging in...' : 'Log In'}
+            {loading ? 'Logging in...' : 'Sign In to Your Space'}
             {!loading && <ArrowRight className="w-4 h-4" />}
           </button>
         </form>
 
-        <p className="text-center text-xs text-slate-500">
-          Don&apos;t have an account?{' '}
-          <Link href="/register" className="font-semibold text-brand-500 hover:underline">
+        <p className="text-center text-xs text-slate-400">
+          Don&apos;t have an account yet?{' '}
+          <Link href="/register" className="font-bold text-emerald-400 hover:underline">
             Register for free
           </Link>
         </p>
