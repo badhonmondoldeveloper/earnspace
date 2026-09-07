@@ -104,23 +104,22 @@ export class MediaAssetService {
       where.name = { contains: search.trim(), mode: 'insensitive' };
     }
 
-    const [assets, total, totalStorage] = await Promise.all([
-      prisma.mediaAsset.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-        include: {
-          folder: { select: { id: true, name: true } },
-          usages: true,
-        },
-      }),
-      prisma.mediaAsset.count({ where }),
-      prisma.mediaAsset.aggregate({
-        where: { userId },
-        _sum: { fileSize: true },
-      }),
-    ]);
+    const assets = await prisma.mediaAsset.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+      include: {
+        folder: { select: { id: true, name: true } },
+        usages: true,
+      },
+    });
+
+    const total = await prisma.mediaAsset.count({ where });
+    const totalStorage = await prisma.mediaAsset.aggregate({
+      where: { userId },
+      _sum: { fileSize: true },
+    });
 
     return {
       assets,
