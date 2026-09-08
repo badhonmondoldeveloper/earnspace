@@ -25,6 +25,16 @@ export interface UpdatePaymentAccountInput {
 
 export class PaymentAccountService {
   /**
+   * Mask sensitive phone numbers for public display (e.g. 01712345678 -> 017****5678)
+   */
+  static maskPhoneNumber(phone: string): string {
+    if (!phone || phone.length < 7) return phone;
+    const start = phone.slice(0, 3);
+    const end = phone.slice(-4);
+    return `${start}****${end}`;
+  }
+
+  /**
    * List all payment accounts for admin desk
    */
   static async listAllAccounts() {
