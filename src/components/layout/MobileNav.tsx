@@ -4,26 +4,21 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Home,
-  Tv,
+  LayoutDashboard,
+  Globe,
   PlusCircle,
-  Bell,
   Menu,
   X,
   User,
-  LayoutDashboard,
-  Globe,
-  Film,
-  MessageSquare,
+  Store,
   DollarSign,
   Wallet,
   CreditCard,
   Share2,
   Settings,
-  Shield,
   BookOpen,
-  Target,
-  Megaphone,
+  Sparkles,
+  Code,
 } from 'lucide-react';
 import UniversalCreateModal from '@/components/content/UniversalCreateModal';
 
@@ -37,34 +32,31 @@ export function MobileNav({ username }: MobileNavProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const navItems = [
-    { label: 'Home', href: '/dashboard', icon: Home },
-    { label: 'Watch', href: '/reels', icon: Tv },
-    { label: 'Create', action: () => setIsCreateModalOpen(true), icon: PlusCircle, isHighlight: true },
-    { label: 'Notifications', href: '/notifications', icon: Bell },
+    { label: 'Studio', href: '/dashboard', icon: LayoutDashboard },
+    { label: 'Marketplace', href: '/templates', icon: Sparkles },
+    { label: 'Store', href: '/dashboard/products', icon: Store },
+    { label: 'Wallet', href: '/wallet', icon: Wallet },
     { label: 'Menu', action: () => setIsDrawerOpen(true), icon: Menu },
   ];
 
   const drawerLinks = [
-    { label: 'My Profile', href: username ? `/@${username}` : '/settings', icon: User },
-    { label: 'News Feed', href: '/dashboard', icon: Home },
-    { label: 'Creator Studio', href: '/creator', icon: LayoutDashboard },
-    { label: 'My Website Space', href: '/dashboard/website', icon: Globe },
-    { label: 'Watch Videos & Reels', href: '/reels', icon: Tv },
-    { label: 'Stories Carousel', href: '/stories', icon: Film },
-    { label: 'Messages & Chat', href: '/messages', icon: MessageSquare },
-    { label: 'Blog Portal', href: '/dashboard/blog', icon: BookOpen },
-    { label: 'Earnings Dashboard', href: '/dashboard/earnings', icon: DollarSign },
-    { label: 'Wallet Balance', href: '/wallet', icon: Wallet },
+    { label: 'My Website Space', href: username ? `/space/${username}` : '/dashboard/website', icon: Globe },
+    { label: 'Website Studio', href: '/dashboard', icon: LayoutDashboard },
+    { label: 'Block Builder', href: '/dashboard/website', icon: Globe },
+    { label: 'Template Marketplace', href: '/templates', icon: Sparkles },
+    { label: 'Digital Store Manager', href: '/dashboard/products', icon: Store },
+    { label: 'Blog & Articles', href: '/dashboard/blog', icon: BookOpen },
+    { label: 'Ad RevShare & Ads', href: '/creator/earnings', icon: DollarSign },
+    { label: 'Developer API & Connect', href: '/dashboard/developer', icon: Code },
+    { label: 'Wallet & Cashout', href: '/wallet', icon: Wallet },
     { label: 'Withdrawal Portal', href: '/withdrawals', icon: CreditCard },
     { label: 'Referral Rewards', href: '/referrals', icon: Share2 },
-    { label: 'Campaigns', href: '/campaigns', icon: Target },
-    { label: 'Advertiser Portal', href: '/advertiser', icon: Megaphone },
     { label: 'Settings & Control', href: '/settings', icon: Settings },
   ];
 
   return (
     <>
-      {/* Fixed Facebook Mobile Bottom Navigation Bar */}
+      {/* Mobile Bottom Navigation Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 py-1.5 px-2 shadow-lg">
         <div className="flex items-center justify-around max-w-md mx-auto">
           {navItems.map((item, idx) => {
@@ -76,13 +68,9 @@ export function MobileNav({ username }: MobileNavProps) {
                 <button
                   key={idx}
                   onClick={item.action}
-                  className={`flex flex-col items-center gap-0.5 p-1 transition ${
-                    item.isHighlight
-                      ? 'text-indigo-600 dark:text-indigo-400 font-bold'
-                      : 'text-slate-500 dark:text-slate-400'
-                  }`}
+                  className="flex flex-col items-center gap-0.5 p-1 transition text-slate-500 dark:text-slate-400"
                 >
-                  <Icon className={`w-5 h-5 ${item.isHighlight ? 'w-6 h-6 stroke-[2.5]' : ''}`} />
+                  <Icon className="w-5 h-5" />
                   <span className="text-[10px] font-medium">{item.label}</span>
                 </button>
               );
@@ -112,7 +100,7 @@ export function MobileNav({ username }: MobileNavProps) {
           <div className="ml-auto w-4/5 max-w-xs h-full bg-white dark:bg-slate-900 flex flex-col shadow-2xl overflow-y-auto">
             {/* Drawer Header */}
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <span className="font-bold text-sm text-slate-900 dark:text-white">EarnSpace Menu</span>
+              <span className="font-bold text-sm text-slate-900 dark:text-white">EarnSpace Studio Menu</span>
               <button
                 onClick={() => setIsDrawerOpen(false)}
                 className="p-1 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -146,17 +134,6 @@ export function MobileNav({ username }: MobileNavProps) {
           </div>
         </div>
       )}
-
-      {/* Create Modal */}
-      <UniversalCreateModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={() => {
-          if (window.location.pathname === '/dashboard') {
-            window.location.reload();
-          }
-        }}
-      />
     </>
   );
 }
