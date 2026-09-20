@@ -18,6 +18,7 @@ import {
   Compass,
   FileText,
   Share2,
+  Code,
 } from 'lucide-react';
 import Link from 'next/link';
 import { SmartAdSlot } from '@/components/ads/SmartAdSlot';
@@ -205,6 +206,21 @@ export default function DashboardPage() {
                 </div>
                 <div className="text-sm font-bold text-white">bKash & Nagad Cashout</div>
                 <div className="text-xs text-slate-400">Manage withdrawal accounts and request 1-click balance cashouts.</div>
+              </Link>
+
+              <Link
+                href="/dashboard/developer"
+                className="p-5 rounded-2xl bg-slate-950 border border-slate-800 hover:border-sky-500/50 transition group space-y-2 sm:col-span-2"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <Code className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-white">Developer API & External Integrations Hub</div>
+                    <div className="text-xs text-slate-400">Connect mobile apps, WordPress plugins, contact form leads, and headless CMS.</div>
+                  </div>
+                </div>
               </Link>
             </div>
           </div>

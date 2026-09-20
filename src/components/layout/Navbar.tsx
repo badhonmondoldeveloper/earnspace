@@ -23,6 +23,7 @@ import {
   Wallet,
   Store,
   DollarSign,
+  Code,
 } from 'lucide-react';
 import UniversalCreateModal from '@/components/content/UniversalCreateModal';
 import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
@@ -310,6 +311,15 @@ export function Navbar({ initialUser }: { initialUser?: any }) {
                       >
                         <Settings className="w-4 h-4 text-slate-400" />
                         <span>Settings & Privacy</span>
+                      </Link>
+
+                      <Link
+                        href="/dashboard/developer"
+                        onClick={() => setIsProfileMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/30 rounded-xl transition"
+                      >
+                        <Code className="w-4 h-4 text-sky-500" />
+                        <span>Developer API & Connect</span>
                       </Link>
 
                       {user.role === 'admin' && (

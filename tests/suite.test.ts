@@ -21,6 +21,7 @@ const { PaymentIntentService } = require('../src/services/paymentIntentService')
 const { TransactionMatchingEngine } = require('../src/services/transactionMatchingEngine');
 const { PaymentRiskEngine } = require('../src/services/paymentRiskEngine');
 const { BkashAdapter } = require('../src/services/providerAdapters/BkashAdapter');
+const { ApiKeyService } = require('../src/services/apiKeyService');
 const { prisma } = require('../src/lib/prisma');
 
 let passed = 0;
@@ -216,6 +217,14 @@ async function runAllTests() {
     parserConfidence: 0.5,
   });
   assert(highRisk.riskLevel === 'HIGH', 'Untrusted mismatched transaction flagged as HIGH risk');
+
+  // 11. DEVELOPER API KEY & CONNECTION SYSTEM
+  console.log('\n--- Test Group 11: Developer API Key & Connection System ---');
+  const invalidKeyCheck = await ApiKeyService.validateApiKey('invalid_key_format');
+  assert(invalidKeyCheck.valid === false && invalidKeyCheck.error === 'Invalid API key format', 'Invalid API key prefix correctly rejected');
+
+  const missingKeyCheck = await ApiKeyService.validateApiKey('es_live_000000000000000000000000');
+  assert(missingKeyCheck.valid === false && missingKeyCheck.error === 'API key not found', 'Unregistered API key correctly rejected');
 
   console.log(`\n========================================`);
   console.log(`QA TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);

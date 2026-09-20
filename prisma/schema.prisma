@@ -96,6 +96,9 @@ model User {
   // Universal Media Library Relations
   mediaFolders             MediaFolder[]
   mediaAssets              MediaAsset[]
+
+  // Developer API Keys Relation
+  apiKeys                  ApiKey[]
 }
 
 model Profile {
@@ -1641,3 +1644,21 @@ model MediaUsage {
 
   asset MediaAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
 }
+
+model ApiKey {
+  id          String    @id @default(uuid())
+  userId      String
+  name        String
+  keyPrefix   String    // e.g. es_live_9f8a
+  hashedKey   String    @unique
+  scopes      String    @default("read:page,read:products,write:leads") // comma-separated scopes
+  environment String    @default("live") // live, test
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  isRevoked   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
